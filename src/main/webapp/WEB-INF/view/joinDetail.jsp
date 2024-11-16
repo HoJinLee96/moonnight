@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
-<%@ page import="dto.RegisterUserDto" %>
-	
+<%@ page import="dto.RegisterUserDto"%>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -19,6 +19,7 @@ input[type="number"] {
 	-moz-appearance: textfield;
 	appearance: textfield;
 }
+
 .container {
 	max-width: 1200px;
 	margin: 0 auto;
@@ -34,7 +35,9 @@ input[type="number"] {
 	border: 1px solid #efefef;
 	border-radius: 10px;
 }
-#detailForm label:not([for="marketingReceivedStatus"]):not([for="agreeToTerms"]) {
+
+#detailForm label:not([for="marketingReceivedStatus"]):not([for="agreeToTerms"])
+	{
 	text-align: left;
 	display: block;
 	margin: 0px;
@@ -44,7 +47,7 @@ input[type="number"] {
 	font-weight: bold;
 }
 
-#verificationSmsCode, #phone{
+#verificationSmsCode, #phone {
 	width: 192px !important;
 }
 
@@ -70,7 +73,7 @@ input[type="number"] {
 	margin-top: 0px !important;
 }
 
-#detailForm input:not([type="checkbox"]){
+#detailForm input:not([type="checkbox"]) {
 	width: 400px;
 	height: 40px;
 	border: none;
@@ -102,43 +105,51 @@ input[type="number"] {
 }
 
 #buttonContainer {
-text-align:center;
+	text-align: center;
 	margin-top: 40px;
 }
+
 #detailForm span {
 	display: block; /* block 요소처럼 동작하도록 설정 */
- 	height: 14px;
+	height: 14px;
 	margin: 0px;
 	font-size: 14px;
 }
-#detailForm h2{
-margin-top:0px;
-margin-bottom: 50px;
+
+#detailForm h2 {
+	margin-top: 0px;
+	margin-bottom: 50px;
 }
-#submitButton{
-height: 40px  !important;
-width: 150px !important;
-cursor: pointer;
+
+#submitButton {
+	height: 40px !important;
+	width: 150px !important;
+	cursor: pointer;
 }
-#marketingReceivedStatus, #agreeToTerms{
-height: 20px;
-width: 20px;
+
+#marketingReceivedStatus, #agreeToTerms {
+	height: 20px;
+	width: 20px;
 }
+
 #input-wrapper {
-            position: relative;
-            display: inline-block;
-        }
-#verificationTimeMessage{
-            position: absolute;
-            top: 40%;
-            right: 10px;
-            transform: translateY(-50%);
-            font-size: 12px;
-            color: red;
-            pointer-events: none; /* 타이머가 클릭되지 않도록 설정 */}
-#marketingReceivedStatus, #agreeToTerms{
-position: relative;
-top:4px;
+	position: relative;
+	display: inline-block;
+}
+
+#verificationTimeMessage {
+	position: absolute;
+	top: 40%;
+	right: 10px;
+	transform: translateY(-50%);
+	font-size: 12px;
+	color: red;
+	pointer-events: none; /* 타이머가 클릭되지 않도록 설정 */
+}
+
+#marketingReceivedStatus, #agreeToTerms {
+	position: relative;
+	top: 4px;
 }
 </style>
 </head>
@@ -149,67 +160,73 @@ top:4px;
 	<div class="container">
 
 		<form id="detailForm">
-			    <%
+			<%
         // 세션에서 userDto 가져오기
         RegisterUserDto registerUserDto = (RegisterUserDto) session.getAttribute("registerUserDto");
         if (registerUserDto != null) {
     %>
-        <input type="hidden" id="email" value="<%= registerUserDto.getEmail() %>">
-        <input type="hidden" id="password" value="<%= registerUserDto.getPassword() %>">
-    <script type="text/javascript">
+			<input type="hidden" id="email"
+				value="<%= registerUserDto.getEmail() %>"> <input
+				type="hidden" id="password"
+				value="<%= registerUserDto.getPassword() %>">
+			<script type="text/javascript">
         document.addEventListener("DOMContentLoaded", function() {
             var userEmail = document.getElementById("email").value;
             var userPasswrod = document.getElementById("password").value;
         });
     </script>
-    <%
+			<%
         } else {
     %>
-    <script type="text/javascript">
+			<script type="text/javascript">
         console.log("정상적이지 않은 접근.");
+        window.location.href = "/join";
     </script>
-    <%
+			<%
         }
     %>
 			<h2>2 단계 : 정보 입력</h2>
 			<div class="step active" id="step1">
 				<div id="subStep1_1">
-				<label for="name">이름</label>
-				<input type="text" id="name" name="name" required onblur="formatName()"> 
+					<label for="name">이름</label> <input type="text" id="name"
+						name="name" required onblur="formatName()">
 				</div>
 				<div id="subStep1_2">
-					<label for="birth">생년월일</label>
-				<input type="number" id="birth" name="birth"
-					placeholder="19990101" maxlength="8"
-					oninput="if(this.value.length > 8) this.value = this.value.slice(0, 8);" onblur="formatBirth()"
-					required> 
+					<label for="birth">생년월일</label> <input type="number" id="birth"
+						name="birth" placeholder="19990101" maxlength="8"
+						oninput="if(this.value.length > 8) this.value = this.value.slice(0, 8);"
+						onblur="formatBirth()" required>
 				</div>
-				<span id="nameBirthMessage"></span>
-				<label for="phone">휴대폰</label>
-				<input type="text" id="phone" name="phone" required oninput="formatPhoneNumber(this)" maxlength="13" value="010-">
-				<button class="sendSmsButton" id="sendSmsButton" type="button" onclick="sendSms()">인증번호 발송</button>
-				<span id="sendSmsMessage"></span>
-				<label for="verificationCode">인증번호</label>
+				<span id="nameBirthMessage"></span> <label for="phone">휴대폰</label> <input
+					type="text" id="phone" name="phone" required
+					oninput="formatPhoneNumber(this)" maxlength="13" value="010-">
+				<button class="sendSmsButton" id="sendSmsButton" type="button"
+					onclick="sendSms()">인증번호 발송</button>
+				<span id="sendSmsMessage"></span> <label for="verificationCode">인증번호</label>
 				<div id="input-wrapper">
-				<input type="text" id="verificationSmsCode" name="verificationSmsCode" required oninput="formatCode(this)" maxlength="5" readonly disabled>
-				<div id ="verificationTimeMessage"></div>
+					<input type="text" id="verificationSmsCode"
+						name="verificationSmsCode" required oninput="formatCode(this)"
+						maxlength="5" readonly disabled>
+					<div id="verificationTimeMessage"></div>
 				</div>
 				<input type="hidden" id="smsSeq" value="" />
-				<button class="verifySmsCodeButton" id="verifySmsCodeButton" type="button" onclick="verifySmsCode()" disabled>인증번호 확인</button>
-				<span id="verificationSmsMessage"></span>
-				<label for="mainAddress">주소</label>
-				<input type="text" id="postcode" name="postcode" onclick="searchAddress()" placeholder="우편번호">
-				<input type="text" id="mainAddress" name="mainAddress" onclick="searchAddress()" placeholder="주소">
-				<input type="text" id="detailAddress" name="detailAddress" autocomplete="off" required placeholder="상세주소">
-				<span id="addressMessage"></span>
-				<input type="checkbox" id="marketingReceivedStatus" name="marketingReceivedStatus">
-				<label for="marketingReceivedStatus">마케팅 정보 사용 동의 (선택)</label>
-  				<br>
-				<input type="checkbox" id="agreeToTerms" name="agreeToTerms" required>
-				<label for="agreeToTerms">개인정보 저장 동의 (필수)</label>
+				<button class="verifySmsCodeButton" id="verifySmsCodeButton"
+					type="button" onclick="verifySmsCode()" disabled>인증번호 확인</button>
+				<span id="verificationSmsMessage"></span> <label for="mainAddress">주소</label>
+				<input type="text" id="postcode" name="postcode"
+					onclick="searchAddress()" placeholder="우편번호"> <input
+					type="text" id="mainAddress" name="mainAddress"
+					onclick="searchAddress()" placeholder="주소"> <input
+					type="text" id="detailAddress" name="detailAddress"
+					autocomplete="off" required placeholder="상세주소"> <span
+					id="addressMessage"></span> <input type="checkbox"
+					id="marketingReceivedStatus" name="marketingReceivedStatus">
+				<label for="marketingReceivedStatus">마케팅 정보 사용 동의 (선택)</label> <br>
+				<input type="checkbox" id="agreeToTerms" name="agreeToTerms"
+					required> <label for="agreeToTerms">개인정보 저장 동의 (필수)</label>
 			</div>
-			<div id= "buttonContainer">
-			<button type="submit" id="submitButton">저장하기</button>
+			<div id="buttonContainer">
+				<button type="submit" id="submitButton">저장하기</button>
 			</div>
 		</form>
 
@@ -219,7 +236,8 @@ top:4px;
 </body>
 
 <!-- 주소 검색 api -->
-<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script
+	src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script src="/static/js/daumAddressSearch4.js"></script>
 
 <!-- sms 인증 api -->
@@ -253,8 +271,10 @@ top:4px;
 				onVerificationCodeSent();
 			} else {
 				message.style.color = 'red';
-				if (xhr.status === 429 || xhr.status === 500) {
+				if (xhr.status === 429) {
 					message.innerText = "잠시 후 다시 시도해주세요.";
+				}else if(xhr.status === 500){
+					message.innerText = "서버 장애 발생";
 				} else {
 					message.innerText = "잠시 후 다시 시도해주세요.";
 				}
@@ -289,10 +309,12 @@ top:4px;
 				return true;
 			} else {
 				message.style.color = 'red';
-				if (xhr.status === 408 || xhr.status === 401) {
+				if (xhr.status === 401) {
 					message.innerText = "인증번호를 다시 확인해주세요.";
-				}else {
+				}else if(xhr.status === 408 ){
 					message.innerText = "잠시 후 다시 시도해주세요."
+				}else {
+	                message.innerText = "서버 장애 발생.";
 				}
 				return false;
 			}
@@ -353,8 +375,8 @@ function validatePhone() {
 			message.style.color = 'red';
 			if (xhr.status === 200) {
 				message.innerText = "이미 가입된 휴대폰 번호 입니다.";
-			} else if(xhr.status === 500){
-				message.innerText = "서버 장애 발생.\n잠시 후 다시 시도해 주세요.";
+			}else if(xhr.status === 500){
+				message.innerText = "서버 장애 발생";
 			}else {
 				message.innerText = "서버 장애 발생.";
 			}

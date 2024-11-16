@@ -32,7 +32,7 @@ public class UserDao {
   
   public int registerUser(UserDto userDto,String encodePassword) throws SQLException {
     String sql =
-        "INSERT INTO user (email, password, name, birth, phone, status, marketing_received_status, created_at) VALUES (?,?,?, ?, ?, ?, ?, ?)";
+        "INSERT INTO user (email, password, name, birth, phone, status, marketing_received_status, created_at, updated_at) VALUES (?,?,?, ?, ?, ?, ?, ?, ?)";
     try (Connection con = dataSource.getConnection();
         PreparedStatement pst = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);) {
       pst.setString(1, userDto.getEmail());
@@ -43,6 +43,7 @@ public class UserDao {
       pst.setString(6, "NORMAL");
       pst.setBoolean(7, userDto.isMarketingReceivedStatus());;
       pst.setTimestamp(8,Timestamp.valueOf(LocalDateTime.now()));
+      pst.setTimestamp(9,Timestamp.valueOf(LocalDateTime.now()));
       pst.executeUpdate();
       ResultSet generatedKeys = pst.getGeneratedKeys();
       if (generatedKeys.next()) {

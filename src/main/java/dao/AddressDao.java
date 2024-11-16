@@ -29,7 +29,7 @@ public class AddressDao {
   @Transactional
   public int registerAddress(AddressDto addressDto) throws SQLException {
     String sql =
-        "INSERT INTO address (user_seq, name, postcode, main_address, detail_address,updated_at) VALUES (?, ?, ?, ?, ?,?)";
+        "INSERT INTO address (user_seq, name, postcode, main_address, detail_address, created_at, updated_at) VALUES (?, ?, ?, ?, ?,?,?)";
     try (Connection con = dataSource.getConnection();
         PreparedStatement pst = con.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS);
         ) {
@@ -39,6 +39,7 @@ public class AddressDao {
       pst.setString(4, addressDto.getMainAddress());
       pst.setString(5, addressDto.getDetailAddress());
       pst.setTimestamp(6, Timestamp.valueOf(LocalDateTime.now()));
+      pst.setTimestamp(7, Timestamp.valueOf(LocalDateTime.now()));
       pst.executeUpdate();
       ResultSet generatedKeys = pst.getGeneratedKeys();
       if (generatedKeys.next()) {

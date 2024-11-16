@@ -35,12 +35,10 @@ public class NaverMailController {
 
   @PostMapping("/verify/sendmail")
   public ResponseEntity<?> sendMail(@RequestParam String reqEmail, HttpServletRequest request){
-    HttpHeaders headers = new HttpHeaders();
-    headers.add("Content-Type", "text/plain; charset=UTF-8");
 
     String clientIp = request.getRemoteAddr();
     if (!rateLimiterService.isAllowed(clientIp)) {
-        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).headers(headers).body("요청 횟수 초과. 잠시 후 시도 해주세요.");
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
     }
 
       try {
@@ -50,9 +48,9 @@ public class NaverMailController {
       } catch (java.security.InvalidKeyException | UnsupportedEncodingException
           | NoSuchAlgorithmException | SQLException e) {
         e.printStackTrace();
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(headers).body("현재 이용할 수 없습니다.");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
       }
-    return ResponseEntity.status(HttpStatus.OK).headers(headers).body("발송 성공.");
+    return ResponseEntity.status(HttpStatus.OK).build();
   }
 
 

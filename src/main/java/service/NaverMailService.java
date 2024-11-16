@@ -78,8 +78,8 @@ public class NaverMailService {
     // 메일 요청 데이터 생성
     Map<String, Object> mailRequest = new HashMap<>();
     mailRequest.put("senderAddress", senderEmail);
-    mailRequest.put("title", "[ chamman 회원 가입 인증번호 ]");
-    mailRequest.put("body", "[ 인증번호 ]" + "\n" + "[" + verificationCode + "]를 입력해주세요");
+    mailRequest.put("title", "[ 달밤청소 회원 가입 인증번호 ]");
+    mailRequest.put("body", "달밤청소 회원 가입 인증번호" + "\n" + "[" + verificationCode + "]를 입력해주세요");
     mailRequest.put("recipients", recipients);
     mailRequest.put("individual", true);
     mailRequest.put("advertising", false);

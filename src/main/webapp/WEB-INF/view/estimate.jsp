@@ -167,6 +167,9 @@ border: 1px solid #20367a;
     background-color: white;
     color:#20367a;
 }
+#receiveAgreeMessage, #emailMessage, #agreementMessage{
+color: red;
+}
 </style>
 
 
@@ -222,7 +225,7 @@ document.addEventListener("DOMContentLoaded", function() {
 						</tr>
 
 						<tr>
-							<td class="tableHeader">연락처<span style="color: red">＊</span></td>
+							<td class="tableHeader">연락처<span style="color: red">＊</span> <span id="receiveAgreeMessage"></span></td>
 						</tr>
 						<tr>
 							<td>
@@ -237,11 +240,11 @@ document.addEventListener("DOMContentLoaded", function() {
 							</td>
 						</tr>
 						<tr>
-							<td><span id="receiveAgreeMessage"></span></td>
+							<td></td>
 						</tr>
 
 						<tr>
-							<td class="tableHeader">이메일</td>
+							<td class="tableHeader">이메일 <span id="emailMessage"></span></td>
 						</tr>
 						<tr>
 							<td><input type="email" id="email"
@@ -288,7 +291,7 @@ document.addEventListener("DOMContentLoaded", function() {
 							<input type="checkbox" id="agreement">
 							<label for ="agreement"> 개인정보 수집 및 이용 동의</label>
 						<a id="agreementClick" href="javascript:;"
-							onclick="javascript:footerlayerLoad('static/InfoAgreement.html'); return false;">[원본]</a>
+							onclick="javascript:footerlayerLoad('static/infoAgreement.html'); return false;">[원본]</a>
 						</div>
 						<input id="submitButton" type="submit" value="등록">
 					</div>
@@ -466,37 +469,18 @@ form.addEventListener('submit', (event) => {
 	  const agreementCheck = document.getElementById('agreement');
 	  const agreementMessage = document.getElementById('agreementMessage');
 	  
-	  if(!agreementCheck.checked){
-		  agreementMessage.style.color="red";
-		  agreementMessage.textContent = "개인정보처리방침에 동의해 주세요.";
-		  return;
-	  }else{
-		  agreementMessage.textContent ="";
-	  }
-	  
 	  //휴대폰
 	  let phone = document.getElementById("phone").value;
 	  const receiveAgreeMessage = document.getElementById('receiveAgreeMessage');
 	  if(phone.length<13){
-		  receiveAgreeMessage.style.color="red";
+
 		  receiveAgreeMessage.innerText="휴대폰 번호를 확인해 주세요.";
+		  alert("휴대폰 번호를 확인해 주세요.");
+		  return;
 	  }else{
 		  receiveAgreeMessage.innerText="";
 	  }
 	  
-	  //주소 값 가져옴
-	  let mainAddress = document.getElementById("mainAddress").value;
-	  //주소 에러 메시지 요소
-	  const addressMessage = document.getElementById('addressMessage');
-	  
-	  if(mainAddress.length===0){
-		  addressMessage.style.color="red";
-		  addressMessage.innerText="주소를 입력 해주세요.";
-		  return;
-	  }else{
-		  addressMessage.innerText="";
-	  }
-
 	  // 모든 체크박스를 가져옴
 	  const checkboxes = document.querySelectorAll('.agreeInput');
 	  let checkedCount = 0;
@@ -508,20 +492,57 @@ form.addEventListener('submit', (event) => {
 	    }
 	  });
 
-	  // 에러 메시지 요소
-	  receiveAgreeMessage.style.color="red";
+
 
 	  // 최소 1개
 	  if (checkedCount < 1) {
-		  receiveAgreeMessage.textContent = "수신 방법을 최소 1개를 선택해야 합니다.";
+		  receiveAgreeMessage.textContent = "수신 방법 선택해 주세요.";
+		  alert("수신 방법 선택해 주세요. ");
 		  return;
 	  } else {
 		  receiveAgreeMessage.textContent = "";
 	  }
+	  
+	  // 수신방법 이메일인지 확인
+	  let eamilAgree = document.getElementById("eamilAgree").checked;
+	  if(eamilAgree){
+		  let email = document.getElementById("email").value;
+		  if(!email){
+			  document.getElementById("emailMessage").textContent = "수신할 이메일을 작성해 주세요.";
+			  alert("수신할 이메일을 작성해 주세요.");
+			  return;
+		  }else{
+			  document.getElementById("emailMessage").textContent = "";
+		  }
+	  }
+	  
+	  //주소 값 가져옴
+	  let mainAddress = document.getElementById("mainAddress").value;
+	  //주소 에러 메시지 요소
+	  const addressMessage = document.getElementById('addressMessage');
+	  
+	  if(mainAddress.length===0){
+		  addressMessage.style.color="red";
+		  addressMessage.innerText="주소를 입력 해주세요.";
+		  alert("주소를 입력 해주세요.");
+		  return;
+	  }else{
+		  addressMessage.innerText="";
+	  }
+	  
+	  
+
+	  if(!agreementCheck.checked){
+		  agreementMessage.textContent = "개인정보처리방침에 동의해 주세요.";
+		  alert("개인정보처리방침에 동의해 주세요.");
+		  return;
+	  }else{
+		  agreementMessage.textContent ="";
+	  }
 
     const name = document.getElementById('name').value;
     /* const phone = document.getElementById('phone').value; */
-    const eamilAgree = document.getElementById('eamilAgree').checked;
+    /* const eamilAgree = document.getElementById('eamilAgree').checked; */
     const smsAgree = document.getElementById('smsAgree').checked;
     const callAgree = document.getElementById('callAgree').checked;
     const email = document.getElementById('email').value;
@@ -593,7 +614,6 @@ $('#estimate').on('submit', function(event) {
 	  let phone = document.getElementById("phone").value;
 	  const receiveAgreeMessage = document.getElementById('receiveAgreeMessage');
 	  if(phone.length<13){
-		  receiveAgreeMessage.style.color="red";
 		  receiveAgreeMessage.innerText="휴대폰 번호를 확인해 주세요.";
 	  }else{
 		  receiveAgreeMessage.innerText="";
@@ -622,9 +642,6 @@ $('#estimate').on('submit', function(event) {
 	      checkedCount++;
 	    }
 	  });
-
-	  // 에러 메시지 요소
-	  receiveAgreeMessage.style.color="red";
 
 	  // 최소 1개
 	  if (checkedCount < 1) {

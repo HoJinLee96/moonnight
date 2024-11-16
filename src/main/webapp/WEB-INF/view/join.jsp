@@ -185,12 +185,12 @@ margin-bottom: 50px;
 				return true;
 			} else {
 				message.style.color = 'red';
-				if (xhr.status === 429 || xhr.status === 500) {
-					message.innerText = xhr.responseText;
-					console.log("인증번호 발송 실패.");
+				if (xhr.status === 429) {
+					message.innerText = "잠시 후 시도해 주세요.";
+				}else if(xhr.status === 500){
+					message.innerText = "서버 장애 발생";
 				} else {
 					message.innerText = "서버 장애 발생.";
-					console.log("인증번호 발송 실패(서버 장애).");
 				}
 				return false;
 			}
@@ -230,9 +230,11 @@ margin-bottom: 50px;
 	            return true;
 	        } else {
 	            message.style.color = 'red';
-	            if (xhr.status === 401 || xhr.status === 500) {
-	                message.innerText = xhr.responseText;
-	            } else {
+	            if (xhr.status === 401) {
+					message.innerText = "인증번호를 다시 확인해주세요.";
+	            }else if(xhr.status === 500){
+					message.innerText = "서버 장애 발생";
+				} else {
 	                message.innerText = "서버 장애 발생.";
 	            }
 	            return false;
@@ -298,8 +300,8 @@ margin-bottom: 50px;
 				message.style.color = 'red';
 				if (xhr.status === 200) {
 					message.innerText = "해당 계정으로 가입할 수 없습니다.";
-				} else if(xhr.status === 500){
-					message.innerText = "서버 장애 발생. \n잠시 후 시도해 주세요.";
+				}else if(xhr.status === 500){
+					message.innerText = "서버 장애 발생";
 				}else {
 					message.innerText = "서버 장애 발생.";
 				}

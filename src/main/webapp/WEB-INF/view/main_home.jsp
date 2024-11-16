@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', function () {
 				<label for="agreement" style="font-size: 14px;">개인정보 수집 및 이용 동의</label>
 			</div>
 			<a style="font-size: 14px;" href="javascript:;"
-				onclick="javascript:footerlayerLoad('static/InfoAgreement.html'); return false;">[원본]</a>
+				onclick="javascript:footerlayerLoad('/static/infoAgreement.html'); return false;">[원본]</a>
 		</div>
 	</div>
 
