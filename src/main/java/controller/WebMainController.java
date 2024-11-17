@@ -96,12 +96,6 @@ public class WebMainController {
    return "joinDetail";
    }
    
-   @GetMapping("/joinSuccess")
-   public String showJoinSuccess(HttpServletRequest req, HttpServletResponse res) {
-     System.out.println("----------WebMainController.showJoinSuccess() 실행----------");
-     return "joinSuccess";
-   }
-   
    @GetMapping("/estimate")
    public String showEstimate(HttpServletRequest req, HttpServletResponse res) {
      System.out.println("----------WebMainController.showEstimate() 실행----------");

@@ -549,7 +549,8 @@ document.getElementById('detailForm').addEventListener('submit', function(event)
         xhr.onreadystatechange = function() {
             if (xhr.readyState === 4) { // 요청 완료
                 if (xhr.status === 200) { // 성공
-                    window.location.href = '/joinSuccess';
+                	alert("회원가입 완료");
+                    window.location.href = '/login';
                 } else {
                     console.error(xhr.statusText);
                     // 에러 처리

@@ -472,35 +472,13 @@ form.addEventListener('submit', (event) => {
 	  //휴대폰
 	  let phone = document.getElementById("phone").value;
 	  const receiveAgreeMessage = document.getElementById('receiveAgreeMessage');
+	  
 	  if(phone.length<13){
-
 		  receiveAgreeMessage.innerText="휴대폰 번호를 확인해 주세요.";
 		  alert("휴대폰 번호를 확인해 주세요.");
 		  return;
 	  }else{
 		  receiveAgreeMessage.innerText="";
-	  }
-	  
-	  // 모든 체크박스를 가져옴
-	  const checkboxes = document.querySelectorAll('.agreeInput');
-	  let checkedCount = 0;
-
-	  // 선택된 체크박스 수를 셈
-	  checkboxes.forEach(function(checkbox) {
-	    if (checkbox.checked) {
-	      checkedCount++;
-	    }
-	  });
-
-
-
-	  // 최소 1개
-	  if (checkedCount < 1) {
-		  receiveAgreeMessage.textContent = "수신 방법 선택해 주세요.";
-		  alert("수신 방법 선택해 주세요. ");
-		  return;
-	  } else {
-		  receiveAgreeMessage.textContent = "";
 	  }
 	  
 	  // 수신방법 이메일인지 확인
@@ -516,6 +494,26 @@ form.addEventListener('submit', (event) => {
 		  }
 	  }
 	  
+	  // 모든 체크박스를 가져옴
+	  const checkboxes = document.querySelectorAll('.agreeInput');
+	  let checkedCount = 0;
+
+	  // 선택된 체크박스 수를 셈
+	  checkboxes.forEach(function(checkbox) {
+	    if (checkbox.checked) {
+	      checkedCount++;
+	    }
+	  });
+
+	  // 최소 1개
+	  if (checkedCount < 1) {
+		  receiveAgreeMessage.textContent = "수신 방법 선택해 주세요.";
+		  alert("수신 방법 선택해 주세요. ");
+		  return;
+	  } else {
+		  receiveAgreeMessage.textContent = "";
+	  }
+	  
 	  //주소 값 가져옴
 	  let mainAddress = document.getElementById("mainAddress").value;
 	  //주소 에러 메시지 요소
@@ -529,8 +527,6 @@ form.addEventListener('submit', (event) => {
 	  }else{
 		  addressMessage.innerText="";
 	  }
-	  
-	  
 
 	  if(!agreementCheck.checked){
 		  agreementMessage.textContent = "개인정보처리방침에 동의해 주세요.";
