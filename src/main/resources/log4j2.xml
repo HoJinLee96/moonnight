@@ -1,65 +1,73 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration xmlns="https://logging.apache.org/xml/ns"
                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-               xsi:schemaLocation="https://logging.apache.org/xml/ns https://logging.apache.org/xml/ns/log4j-config-2.xsd"
-				status="WARN">
-				
-    <Properties>
-        <!-- 공통으로 사용할 로그 파일 경로를 정의 -->
+               xsi:schemaLocation="https://logging.apache.org/xml/ns https://logging.apache.org/xml/ns/log4j-config-2.23.1.xsd">
+               
+	<Properties>
+		<!-- 공통으로 사용할 로그 파일 경로를 정의 -->
 		<Property name="LOG_FILE" value="/var/log/myapp/application.log" />
 		<Property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n" />
-    </Properties>
+	</Properties>
 
-    <!-- 로그를 출력하는 방식(Appender)을 정의 -->
-    <Appenders>
-        <!-- ConsoleAppender: 로그를 콘솔에 출력 -->
-        <Console name="ConsoleAppender" target="SYSTEM_OUT">
-            <PatternLayout pattern="${LOG_PATTERN}" />
-        </Console>
+	<!-- 로그를 출력하는 방식(Appender)을 정의 -->
+	<Appenders>
+		<!-- ConsoleAppender: 로그를 콘솔에 출력 -->
+		<Console name="ConsoleAppender" target="SYSTEM_OUT">
+			<PatternLayout pattern="${LOG_PATTERN}" />
+		</Console>
 
-        <!-- FileAppender: 로그를 파일에 기록 -->
-        <File name="FileAppender" fileName="${LOG_FILE}">
-            <PatternLayout pattern="${LOG_PATTERN}" />
-        </File>
+		<!-- FileAppender: 로그를 파일에 기록 -->
+		<!-- <File name="FileAppender" fileName="${LOG_FILE}"> <PatternLayout pattern="${LOG_PATTERN}" 
+			/> </File> -->
 
-        <!-- RollingFileAppender: 로그 파일을 일정 크기 이상이 되면 새 파일로 교체 -->
-        <RollingFile name="RollingFileAppender" fileName="${LOG_FILE}"
-                     filePattern="/var/log/myapp/application-%d{yyyy-MM-dd}-%i.log.gz">
-            <PatternLayout pattern="${LOG_PATTERN}" />
-            <Policies>
-                <!-- 하루 단위로 파일 롤링 -->
-                <TimeBasedTriggeringPolicy />
-                <!-- 파일 크기가 10MB 이상일 경우 롤링 -->
-                <SizeBasedTriggeringPolicy size="10MB" />
-            </Policies>
-        </RollingFile>
+		<!-- RollingFileAppender: 로그 파일을 일정 크기 이상이 되면 새 파일로 교체 -->
+		<RollingFile name="RollingFileAppender"
+			fileName="${LOG_FILE}"
+			filePattern="/var/log/myapp/application-%d{yyyy-MM-dd}-%i.log.gz">
+			<PatternLayout pattern="${LOG_PATTERN}" />
+			<Policies>
+				<!-- 하루 단위로 파일 롤링 -->
+				<TimeBasedTriggeringPolicy />
+				<!-- 파일 크기가 10MB 이상일 경우 롤링 -->
+				<SizeBasedTriggeringPolicy size="10MB" />
+			</Policies>
+		</RollingFile>
 
-        <!-- SMTPAppender: 특정 레벨 이상의 로그가 발생하면 이메일 전송 -->
-        <SMTP name="EmailAppender" subject="Critical Error Detected"
-              to="tuy76534@gmail.com" from="cham@chamman.net" smtpHost="cham@chamman.net">
-            <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY" />
-            <PatternLayout pattern="${LOG_PATTERN}" />
-        </SMTP>
-    </Appenders>
+		<!-- SMTPAppender: 특정 레벨 이상의 로그가 발생하면 이메일 전송 -->
+		<!-- 
+    <SMTP name="EmailAppender"
+          to="tuy76534@gmail.com"
+          from="cham@chamman.net"
+          smtpHost="chamman.net"
+          smtpPort="587"
+          subject="Log Alert: ${sys:logLevel}"
+          >
+          
+		<PatternLayout>
+		    <LevelPatternSelector defaultPattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n">
+		        <PatternMatch key="ERROR" pattern="%d{yyyy-MM-dd HH:mm:ss} [ERROR] %msg%n"/>
+		        <PatternMatch key="WARN" pattern="%d{HH:mm:ss} [WARN] %msg%n"/>
+		    </LevelPatternSelector>
+		</PatternLayout>
+    </SMTP>
+     -->
 
-    <!-- 로거(Logger)를 정의 -->
-    <Loggers>
-        <!-- 애플리케이션의 기본 로거 설정 -->
-        <Root level="INFO">
-            <!-- 콘솔 및 파일에 로그 기록 -->
-            <AppenderRef ref="ConsoleAppender" />
-            <AppenderRef ref="FileAppender" />
-            <AppenderRef ref="RollingFileAppender" />
-        </Root>
+	</Appenders>
 
-        <!-- 특정 패키지에 대한 별도 로깅 설정 -->
-        <Logger name="com.myapp.security" level="DEBUG">
-            <AppenderRef ref="FileAppender" />
-        </Logger>
+	<!-- 로거(Logger)를 정의 -->
+	<Loggers>
+		<!-- 애플리케이션의 기본 로거 설정 -->
+		<Root level="WARN">
+			<!-- 콘솔 및 파일에 로그 기록 -->
+			<AppenderRef ref="ConsoleAppender" />
+			<AppenderRef ref="RollingFileAppender" />
+		</Root>
 
-        <!-- 심각한 에러는 이메일 알림 -->
-        <Logger name="com.myapp.critical" level="ERROR">
-            <AppenderRef ref="EmailAppender" />
-        </Logger>
-    </Loggers>
+		<!-- 심각한 에러는 이메일 알림 -->
+		<!-- 
+		<Logger name="com.myapp.critical" level="ERROR">
+			<AppenderRef ref="EmailAppender" />
+		</Logger>
+		 -->
+	</Loggers>
 </Configuration>
