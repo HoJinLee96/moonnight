@@ -489,9 +489,9 @@ form.addEventListener('submit', (event) => {
 			  document.getElementById("emailMessage").textContent = "수신할 이메일을 작성해 주세요.";
 			  alert("수신할 이메일을 작성해 주세요.");
 			  return;
-		  }else{
-			  document.getElementById("emailMessage").textContent = "";
 		  }
+	  }else{
+		  document.getElementById("emailMessage").textContent = "";
 	  }
 	  
 	  // 모든 체크박스를 가져옴
