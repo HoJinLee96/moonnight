@@ -6,9 +6,6 @@
 <meta charset="UTF-8">
 <title>달밤청소</title>
 <style type="text/css">
-body{
-margin: 8px 0px;
-}
 .container {
 	max-width: 1200px;
 	min-width: 1024px;
@@ -16,7 +13,6 @@ margin: 8px 0px;
 	min-height: 1080px;
 	padding-top: 30px;
 }
-
 .mainImg {
 	max-width: 900px;
 	min-width: 900px; 
@@ -27,17 +23,14 @@ margin: 8px 0px;
 	width: 100%;
 }
 #speedEstimateContainer{
-display:flex;
-	max-width: 1920px;
-	min-width: 1600px;
-	height:80px;
+	width: 100vw;
+	line-height: 80px;
 	background-color: #dbf1fd;
 	font-size: 15px;
-	margin: 0px auto;
 }
 #speedEstimate{
-margin:auto;
-min-width: 950px;
+	width: 100vw;
+	text-align: center;
 }
 #speedEstimate form{
 display: inline;

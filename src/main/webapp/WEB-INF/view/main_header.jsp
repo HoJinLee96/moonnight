@@ -17,10 +17,15 @@
 </style>
 
 <style type="text/css">
+body{
+	width: 100vw;
+ 	overflow-x: hidden;
+ 	margin: 0px;
+}
 #headerContainer{
-	max-width: 1920px;
-	/* min-width: 1024px; */
-	margin: 0 auto;
+ 	width: 100vw;
+ 	height: 117px;
+ 	padding-top: 8px;
 }
 .background-image {
     position: absolute;
@@ -28,8 +33,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-	max-width: 1920px;
-	min-width: 1600px;
+    width: 100vw;
     height:125px;
     margin: 0 auto;
     background-image: url('/static/img/headerBackground2.jpg'); /* 배경 이미지 경로 */
@@ -51,16 +55,13 @@
     margin: auto; /* 로고가 중앙에 오도록 설정 */
 }
 .top_inner{
+	width: 100vw;
     display: flex;
     justify-content: flex-end;
-	padding: 8px 20px 0px 20px;
-	max-width: 1550px;
-	/* min-width: 984px; */
-	min-width: 1550px;
-	margin: 0 auto;
 	z-index: 3;
 }
 .top_nav{
+	padding-right: 5vw;
 	z-index: 3;
 }
 .top_nav ul{
@@ -81,17 +82,14 @@
 
 }
 .top_main {
+	width: 100vw;
 	display: flex;
-	max-width: 1550px;
-	/* min-width: 984px; */
-	min-width: 1550px;
-	margin: 0 auto;
-	padding: 0px 20px;
 	justify-content: space-between;
 }
 #log_div{
  display: flex;
  flex-direction: column;
+ margin-left: 5vw;
 }
 
 #main_nav_div{
@@ -104,6 +102,7 @@
 	list-style: none;
 	margin-top: auto;
 	margin-bottom: 6px;
+	margin-right: 5vw;
 }
 .main_nav a{
 text-decoration: none;
