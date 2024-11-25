@@ -7,8 +7,7 @@
 <title>달밤청소</title>
 <style type="text/css">
 .container {
-	max-width: 1200px;
-	min-width: 1024px;
+	min-width: 980px;
 	margin: 0 auto;
 	min-height: 1080px;
 	padding-top: 30px;
@@ -24,12 +23,17 @@
 }
 #speedEstimateContainer{
 	width: 100vw;
+	min-width: 980px;
+    max-width: 1900px;
+    margin: 0px auto;
 	line-height: 80px;
 	background-color: #dbf1fd;
 	font-size: 15px;
 }
 #speedEstimate{
 	width: 100vw;
+	min-width: 980px;
+    max-width: 1900px;
 	text-align: center;
 }
 #speedEstimate form{

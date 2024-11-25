@@ -7,48 +7,51 @@
 <title>주소록</title>
 <style type="text/css">
 p{
-margin: 0px;
+	margin: 0px;
 }
 .contentTitle{
-padding-bottom : 15px;
-border-bottom: 4px solid #20367a;
-}
-#address0{
-border: 2px solid #20367a;
-margin-bottom: 20px;
+	padding-bottom : 15px;
+	border-bottom: 4px solid #20367a;
 }
 .address{
-position:relative;
-border: 2px solid #afafaf;
-border-radius: 10px;
-padding: 15px 15px;
-margin-top: 10px;
+	display: flex;
+	border: 2px solid #afafaf;
+	border-radius: 10px;
+	padding: 15px 15px;
+	margin-top: 10px;
 }
 .sortedAddress{
-width:1000px;
-white-space: nowrap;/* 줄바꿈없음 */
-overflow:hidden;
-text-overflow: ellipsis;/*...으로표시  */
+	width: 100vw;
+    min-width: 615px;
+    max-width: 899px;
 }
 .buttonDiv{
-display: inline;
-position: absolute;
-right: 20px;
-top:20px;
+	line-height: 42px;
 }
 .buttonDiv button{
-color: #20367a;
-background: white;
-border: 1px solid #20367a;
-border-radius: 10px;
-cursor: pointer;
-padding: 5px 10px;
-margin-left: 10px;
+	width: 47px;
+	color: #20367a;
+	background: white;
+	border: 1px solid #20367a;
+	border-radius: 10px;
+	cursor: pointer;
+	padding: 5px 10px;
 }
 .buttonDiv button:hover{
-background: #20367a;
-border: 1px solid white;
-color: white;
+	background: #20367a;
+	border: 1px solid white;
+	color: white;
+}
+.addressNickname{
+    min-width: 615px;
+    max-width: 799px;
+}
+.sortedAddressText{
+    min-width: 615px;
+    max-width: 799px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 </style>
 
@@ -90,60 +93,60 @@ color: white;
 	cursor: pointer;
 }
 .close:hover {
-color:#20367a;
+	color:#20367a;
 }
 .name, .postcode, .mainAddress, .detailAddress{
-display:block;
-background: none;
-border: none;
-border-bottom: 2px solid #aaa;
-font-size: 16px;
-width: 500px;
-padding: 10px 5px;
-outline: none;
-transition: border-bottom-color 0.3s;
+	display:block;
+	background: none;
+	border: none;
+	border-bottom: 2px solid #aaa;
+	font-size: 16px;
+	width: 500px;
+	padding: 10px 5px;
+	outline: none;
+	transition: border-bottom-color 0.3s;
 }
 .name{
-margin-bottom: 30px;
+	margin-bottom: 30px;
 }
 .name:focus{
-border-bottom: 2px solid #20367a;
+	border-bottom: 2px solid #20367a;
 }
 .postcode{
-width: 100px; !important
+	width: 100px; !important
 }
 .postcode, .mainAddress{
-height:43px;
-cursor: text;
-margin-bottom: 10px;
-text-align: left;
+	height:43px;
+	cursor: text;
+	margin-bottom: 10px;
+	text-align: left;
 }
 #detailAddress{
-height: 43px;
+	height: 43px;
 }
 #detailAddress:focus{
-border-bottom: 2px solid #20367a;
+	border-bottom: 2px solid #20367a;
 }
 .iframe p{
-color: #8b8b8b;
+	color: #8b8b8b;
 }
 
 .addAddress{
-position:relative;
-border: 2px solid #afafaf;
-border-radius: 10px;
-border-style:dotted;
-padding: 15px 15px;
-margin-top: 10px;
-height: 42px;
-cursor: pointer;
+	position:relative;
+	border: 2px solid #afafaf;
+	border-radius: 10px;
+	border-style:dotted;
+	padding: 15px 15px;
+	margin-top: 10px;
+	height: 42px;
+	cursor: pointer;
 }
 .plusButton{
-position: absolute;
-color:#aaa;
-font-size:24px;
-top: 30%;
-left: 50%;
+	position: absolute;
+	color:#aaa;
+	font-size:24px;
+	top: 30%;
+	left: 50%;
 }
 
 .updateButton{
@@ -158,6 +161,7 @@ left: 50%;
     cursor: pointer;
     padding: 10px 20px;
 }
+
 
 </style>
 </head>
@@ -176,15 +180,23 @@ document.addEventListener("DOMContentLoaded", function() {
 		        addressDiv.id = "address" + index;  // id에 인덱스를 추가하여 유일하게 만듦
 
 
-		        // 이름 (수정이 필요할 경우 여기서 추가)
-		        var nameP = document.createElement('p');
-		        nameP.textContent = address.name || '이름 없음';  // AddressDto에 'name'이 있는 경우 사용
+		        // 배송지명 값
+		        var addressNicknameP = document.createElement('p');
+		        addressNicknameP.classList.add('addressNickname');
+		        addressNicknameP.textContent = address.name || '이름 없음';  // AddressDto에 'name'이 있는 경우 사용
 
-		        // 주소 정보
+		        // 주소 값
+		        var sortedAddressText = document.createElement('p');
+		        sortedAddressText.classList.add('sortedAddressText');
+		        sortedAddressText.textContent = '(' + address.postcode + ') ' + address.mainAddress + ' ' + address.detailAddress;
+		        
+		        // 주소 합친 div
 		        var sortedAddressDiv = document.createElement('div');
 		        sortedAddressDiv.classList.add('sortedAddress');
 		        sortedAddressDiv.id = "sortedAddress" + index;  // id에 인덱스를 추가하여 유일하게 만듦
-		        sortedAddressDiv.textContent = '(' + address.postcode + ') ' + address.mainAddress + ' ' + address.detailAddress;
+
+		        sortedAddressDiv.appendChild(addressNicknameP);
+		        sortedAddressDiv.appendChild(sortedAddressText);
 
 		        // hidden input (addressSeq)
 		        var addressSeqInput = document.createElement('input');
@@ -220,11 +232,9 @@ document.addEventListener("DOMContentLoaded", function() {
 		        deleteButton.textContent = '삭제';
 		        buttonDiv.appendChild(deleteButton);
 		        }
-		        
-		        
 
 		        // 요소들을 addressDiv에 추가
-		        addressDiv.appendChild(nameP);
+		        /* addressDiv.appendChild(nameP); */
 		        addressDiv.appendChild(sortedAddressDiv);
 		        addressDiv.appendChild(addressSeqInput);
 		        addressDiv.appendChild(buttonDiv);
@@ -284,25 +294,7 @@ document.addEventListener("DOMContentLoaded", function() {
 		<%@ include file="mypageSidebar.jsp"%>
 		<div class="content">
 			<p class="headerFont contentTitle">주소록</p>
-<!-- 			
-			<div class ="address" id ="address0">
-				<p>이호진</p>
-				<div class="sortedAddress" id ="sortedAddress">주소입력칸</div>
-				<input id="addressSeq" type="hidden">
-				<div class="buttonDiv">
-				<button type="button" id="updateAddress">수정</button>
-				</div>
-			</div>
-			<div class ="address" id ="address1">
-				<p>이호진</p>
-				<div class="sortedAddress" id ="sortedAddress">12345 월드컵로42길 12 805동502호 가나다라마바사아자차카타파하가나다라마바사아자차카타파하</div>
-				<input id="addressSeq" type="hidden">
-				<div class="buttonDiv">
-				<button type="button" id="updateAddress">수정</button>
-				<button type="button" id="deleteAddress">삭제</button>
-				</div>
-			</div>
--->
+
 		</div>
 	</div>
 <%@include file ="main_footer.jsp" %>

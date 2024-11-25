@@ -7,10 +7,12 @@
 <style type="text/css">
 .container {
 	display: flex;
-	max-width: 1400px;
 	margin: 0 auto;
 	padding-top: 50px;
-	min-height: 1080px;
+	width: 100vw;
+	max-width: 1900px;
+	min-width: 980px;
+	justify-content: center;
 }
 
 .sidebar {
@@ -41,7 +43,9 @@
 }
 
 .content {
-	min-width: 1100px;
+	min-width: 713px;
+	max-width: 989px;
+	width: 100vw;
 	padding: 0px 50px;
 }
 

@@ -8,12 +8,12 @@
 <style type="text/css">
 
 .footer{
-	width: 100%;
+	width: 100vw;
 	padding-top: 20px;
 	min-height: 300px;
 	border-top: 1px solid #efefef;
 	min-width: 840px;
-	max-width:1920px;
+	max-width:1900px;
 	margin : 0px auto;
 	margin-top: 100px;
 }

@@ -18,12 +18,14 @@
 
 <style type="text/css">
 body{
-	width: 100vw;
- 	overflow-x: hidden;
- 	margin: 0px;
+    min-width: 980px;
+    max-width: 1900px;
+    width: 100vw;
+ 	margin: 0px auto;
 }
 #headerContainer{
- 	width: 100vw;
+ 	min-width: 980px;
+    max-width: 1900px;
  	height: 117px;
  	padding-top: 8px;
 }
@@ -33,6 +35,8 @@ body{
     left: 0;
     right: 0;
     bottom: 0;
+	min-width: 980px;
+    max-width: 1905px;
     width: 100vw;
     height:125px;
     margin: 0 auto;
@@ -55,7 +59,8 @@ body{
     margin: auto; /* 로고가 중앙에 오도록 설정 */
 }
 .top_inner{
-	width: 100vw;
+	min-width: 980px;
+    max-width: 1900px;
     display: flex;
     justify-content: flex-end;
 	z-index: 3;
@@ -82,7 +87,8 @@ body{
 
 }
 .top_main {
-	width: 100vw;
+	min-width: 980px;
+    max-width: 1900px;
 	display: flex;
 	justify-content: space-between;
 }
@@ -110,6 +116,9 @@ color: white;
 font-size: 23px;
 padding-left: 20px;
 
+}
+.container{
+min-height: 1080px;
 }
 </style>
 </head>
