@@ -5,9 +5,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import dto.User;
 
@@ -15,22 +16,21 @@ import dto.User;
 public class LoginLogDao {
 
   private final DataSource dataSource;
-  private final JdbcTemplate jdbcTemplate;
 
   @Autowired
-  public LoginLogDao(DataSource dataSource,JdbcTemplate jdbcTemplate) {
+  public LoginLogDao(DataSource dataSource) {
     this.dataSource = dataSource;
-    this.jdbcTemplate = jdbcTemplate;
   }
   
   public void loginSuccess(User user,String ip) throws SQLException {
 
-    String sql = "insert into login_success_log (provider,id,ip) values (?,?,?)";
+    String sql = "insert into login_success_log (provider,id,ip,create_at) values (?,?,?,?)";
     try (Connection con = dataSource.getConnection();
         PreparedStatement pst = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);) {
       pst.setString(1, user.getProvider());
       pst.setString(2, user.getEmail());
       pst.setString(3, ip);
+      pst.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
       pst.executeUpdate();
       ResultSet generatedKeys = pst.getGeneratedKeys();
       if (generatedKeys.next()) {

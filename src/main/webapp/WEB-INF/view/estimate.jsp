@@ -344,6 +344,7 @@ document.getElementById('postcode').addEventListener('input',function(event){
 <!-- 이미지 압축 Compressor.js 라이브러리 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/compressorjs/1.0.6/compressor.min.js"></script>
 
+<!--휴대폰 번호 포맷 -->
 <script type="text/javascript">
 //휴대폰 번호 규칙
 function formatPhoneNumber(input) {
@@ -564,7 +565,7 @@ form.addEventListener('submit', (event) => {
         imageList: selectedImages // base64 인코딩된 이미지 리스트
     };
 
-    // 서버로 데이터 전송
+    // 서버로 데이터 전송 함수 호출
     sendEstimateToServer(requestEstimateDto);
 });
 

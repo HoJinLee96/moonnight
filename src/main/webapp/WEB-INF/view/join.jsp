@@ -162,7 +162,7 @@ margin-bottom: 50px;
 
 		if (validateEmail()) {
 			var xhr = new XMLHttpRequest();
-			xhr.open('POST', '/api/verify/sendmail', false); // 동기식 요청으로 변경
+			xhr.open('POST', '/mail/send/verify', false); // 동기식 요청으로 변경
 			xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 	        var data = 'reqEmail=' + encodeURIComponent(reqEmail);
 	        xhr.send(data);
@@ -209,7 +209,7 @@ margin-bottom: 50px;
 	        message.innerText = "인증번호를 다시 확인해주세요.";
 	    }else {
 	        var xhr = new XMLHttpRequest();
-	        xhr.open('POST', '/api/verify/comparecode', false); // 동기식 요청으로 변경
+	        xhr.open('POST', '/verify/comparecode', false); // 동기식 요청으로 변경
 	        xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 	        xhr.send('reqCode=' + encodeURIComponent(reqCode));
 

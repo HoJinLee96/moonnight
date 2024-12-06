@@ -16,7 +16,7 @@ import jakarta.servlet.http.HttpSession;
 import service.VerificationServices;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/verify")
 public class VerificationController {
 
   VerificationServices verificationServices;
@@ -27,7 +27,7 @@ public class VerificationController {
     this.verificationServices = verificationServices;
   }
 
-  @PostMapping("/verify/comparecode")
+  @PostMapping("/comparecode")
   public ResponseEntity<?> verifySms(HttpServletRequest req,@RequestParam String reqCode) {
 
     HttpSession session = req.getSession(false);

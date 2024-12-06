@@ -21,8 +21,8 @@ public class RateLimiterService {
         ValueOperations<String, String> ops = redisTemplate.opsForValue();
         Long reqCount = ops.increment(key,1);
         if (reqCount == 1) {
-            redisTemplate.expire(key, 10, TimeUnit.MINUTES); // 10분 동안 유효
+            redisTemplate.expire(key, 30, TimeUnit.MINUTES); // 30분 동안 유효
         }
-        return reqCount <= 5; // 10분 동안 최대 5회 요청 허용
+        return reqCount <= 10; // 30분 동안 최대 10회 요청 허용
     }
 }

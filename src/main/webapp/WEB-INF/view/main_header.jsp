@@ -147,7 +147,7 @@ min-height: 1080px;
 	</div>
 	<div class = "top_main">
 		<div id="log_div">
-			<a id="logopng" href="/home">
+			<a id="logopng" href="/">
 				<img src="/static/img/headerLogo.png" alt="Logo" class="logopng">
 			</a>
 		</div>
@@ -161,18 +161,4 @@ min-height: 1080px;
 	
 	</div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script type="text/javascript">
-var previousURI = document.referrer;
-console.log("previousURI = document.referrer는 " + previousURI);
-
-var previousDomain = new URL(previousURI).origin;
-console.log("previousDomain = new URL(previousURI).origin는 " + previousDomain);
-
-var previousPath = new URL(previousURI).pathname;
-console.log("previousPath = new URL(previousURI).pathname 는 " + previousPath);
-
-var currentDomain = window.location.origin;
-console.log("currentDomain = window.location.origin는 " + currentDomain);
-
-</script>
 </html>

@@ -18,12 +18,12 @@ import service.RateLimiterService;
 import service.VerificationServices;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/mail")
 public class NaverMailController {
   
-  private final NaverMailService mailService;
-  private final RateLimiterService rateLimiterService;
-  private final VerificationServices verificationServices;
+  NaverMailService mailService;
+  RateLimiterService rateLimiterService;
+  VerificationServices verificationServices;
 
   @Autowired
   public NaverMailController(NaverMailService mailService, RateLimiterService rateLimiterService,
@@ -33,7 +33,7 @@ public class NaverMailController {
     this.verificationServices = verificationServices;
   }
 
-  @PostMapping("/verify/sendmail")
+  @PostMapping("/send/verify")
   public ResponseEntity<?> sendMail(@RequestParam String reqEmail, HttpServletRequest request){
 
     String clientIp = request.getRemoteAddr();

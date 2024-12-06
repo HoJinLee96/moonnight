@@ -21,7 +21,7 @@ public class WebMainController {
   @GetMapping({"/", "/home"})
   public String showHome(HttpServletRequest req, HttpServletResponse res) {
     System.out.println("----------WebMainController.showHome() 실행----------");
-    return "main_home";
+    return "home";
   }
 
 

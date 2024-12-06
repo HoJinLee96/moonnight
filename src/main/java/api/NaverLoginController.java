@@ -136,11 +136,11 @@ public class NaverLoginController {
         int oauthSeq = oAuthService.registerOAuth(oAuthDto);
         oAuthDto.setOauthSeq(oauthSeq);
         
-//        session.setAttribute("oAuthDto", oAuthDto);
-//        session.setAttribute("oAuthToken", oAuthToken);
-//        session.setAttribute("oAuthTokenExpiry", System.currentTimeMillis() + (Integer.parseInt(oAuthToken.getExpires_in()) * 1000));
-//        headers.setLocation(URI.create(previousPageUrl));
-//        return ResponseEntity.status(HttpStatus.SEE_OTHER).headers(headers).build();
+        session.setAttribute("oAuthDto", oAuthDto);
+        session.setAttribute("oAuthToken", oAuthToken);
+        session.setAttribute("oAuthTokenExpiry", System.currentTimeMillis() + (Integer.parseInt(oAuthToken.getExpires_in()) * 1000));
+        headers.setLocation(URI.create(previousPageUrl));
+        return ResponseEntity.status(HttpStatus.SEE_OTHER).headers(headers).build();
       }
       
       // 4-2. 기존 유저 이용자(oauth테이블에 데이터가 있는 경우)

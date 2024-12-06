@@ -91,7 +91,7 @@ public class NaverSmsService {
 
 		// api 요청 양식에 맞춰 세팅
 		SmsRequestDto request = SmsRequestDto.builder().type("SMS").contentType("COMM").countryCode("82").from(phone)
-				.content("[ goodsone1 인증번호 ]"+ "\n" +  "[" + verificationCode + "]를 입력해주세요").messages(messages).build();
+				.content("[ 달밤청소 가입 인증번호 ]"+ "\n" +  "[" + verificationCode + "]를 입력해주세요").messages(messages).build();
 
 		// request를 json형태로 body로 변환
 		ObjectMapper objectMapper = new ObjectMapper();
@@ -129,5 +129,51 @@ public class NaverSmsService {
 		}
 		return key.toString();
 	}
+	
+    public void sendEstimateSeq(String phoneNumber, int estimateSeq)
+        throws RestClientException, URISyntaxException, JsonProcessingException,
+        java.security.InvalidKeyException, UnsupportedEncodingException, NoSuchAlgorithmException {
+
+      // 현재시간
+      String time = Long.toString(System.currentTimeMillis());
+      System.out.println("현재시간 발생 : " + time);
+
+      // 수신사 생성
+      MessageDto messageDto = new MessageDto(phoneNumber);
+      List<MessageDto> messages = new ArrayList<>();
+      messages.add(messageDto);
+
+      // 헤더세팅
+      HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_JSON);
+      headers.set("x-ncp-apigw-timestamp", time);
+      headers.set("x-ncp-iam-access-key", accessKey);
+      headers.set("x-ncp-apigw-signature-v2", naverCreateSignature.getSignature("POST",
+          smsEndpoint + this.serviceId + sendSmsUri, time));
+      headers.add("Content-Type", "application/json; charset=UTF-8");
+
+      // api 요청 양식에 맞춰 세팅
+      SmsRequestDto request = SmsRequestDto.builder().type("SMS").contentType("COMM")
+          .countryCode("82").from(phone)
+          .content("[견적 번호 : " + estimateSeq + " ]\n" + "달밤청소 문의 주셔서 감사합니다." + "\n빠른 시일 내에 연락 드리겠습니다")
+          .messages(messages).build();
+
+      // request를 json형태로 body로 변환
+      ObjectMapper objectMapper = new ObjectMapper();
+      objectMapper.configure(JsonGenerator.Feature.ESCAPE_NON_ASCII, true);
+      String body = objectMapper.writeValueAsString(request);
+
+      // body와 header을 합친다
+      HttpEntity<String> httpBody = new HttpEntity<>(body, headers);
+
+      // restTemplate를 통해 외부 api와 통신
+      RestTemplate restTemplate = new RestTemplate();
+      restTemplate.getMessageConverters().add(0,new StringHttpMessageConverter(StandardCharsets.UTF_8));
+      restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
+
+      restTemplate.postForObject(new URI(smsApiUrl + smsEndpoint + this.serviceId + sendSmsUri),
+          httpBody, VerifyResponseDto.class);
+
+    }
 	
 }

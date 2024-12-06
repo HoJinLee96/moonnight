@@ -18,22 +18,37 @@
      z-index: 1000;
 }
  .popContent {
- width:800px;
- height:650px;
+	 width:800px;
+	 height:650px;
      background-color: white;
-     padding: 20px;
+     padding: 10px;
      border-radius: 10px;
      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
      margin:0px auto;
      margin-top:150px;
      position: relative;
  }
+ 
  .close-btn {
- float: right;
- display:inline;
- margin-bottom:10px;
-     cursor: pointer;
- }
+	position: absolute;
+	top: 15px;
+	left: 20px;
+	color: #aaa;
+	font-size: 28px;
+	font-weight: bold;
+	cursor: pointer;
+}
+
+.close-btn:hover, .close-btn:focus {
+	color: #20367a;
+	text-decoration: none;
+	cursor: pointer;
+}
+iframe{
+	border: none;
+	width: 800px;
+	height: 650px;
+}
 
 </style>
 </head>
@@ -41,8 +56,8 @@
 function footerlayerLoad(filePath) {
     var overlay = $('<div class="overlay"></div>');
     var popContent = $('<div class="popContent"></div>');
-    var closeBtn = $('<div class="close-btn">X</div>');
-    var iframe = $('<iframe src="' + filePath + '" width="800" height="600"></iframe>');
+    var closeBtn = $('<div class="close-btn">&times;</div>');
+    var iframe = $('<iframe src="' + filePath + '"></iframe>');
 
     closeBtn.on('click', function() {
         overlay.remove();

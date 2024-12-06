@@ -1,10 +1,12 @@
 package api;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestClientException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -28,6 +31,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import service.EstimateService;
+import service.NaverSmsService;
+import service.RateLimiterService;
 
 @RestController
 @RequestMapping("/estimate")
@@ -35,39 +40,44 @@ import service.EstimateService;
 public class EstimateController {
   
   EstimateService estimateService;
+  RateLimiterService rateLimiterService;
+  NaverSmsService smsService;
 
   @Autowired
-  public EstimateController(EstimateService estimateService) {
+  public EstimateController(EstimateService estimateService, RateLimiterService rateLimiterService, NaverSmsService smsService) {
     this.estimateService = estimateService;
+    this.rateLimiterService = rateLimiterService;
+    this.smsService = smsService;
   }
 
   @PostMapping("/register")
-  public ResponseEntity<?> registerEstimate(@RequestBody RequestEstimateDto requestEstimateDto, HttpSession session) {
+  public ResponseEntity<?> registerEstimate(
+      @RequestBody RequestEstimateDto requestEstimateDto,
+      HttpServletRequest request, 
+      HttpSession session) {
     
-    System.out.println("EstimateController.registerEstimate() 실행");
-    
-    HttpHeaders headers = new HttpHeaders();
-    headers.add("Content-Type", "text/plain; charset=UTF-8");
+    String clientIp = request.getRemoteAddr();
+    if (!rateLimiterService.isAllowed(clientIp)) {
+      return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+    }
     
     UserDto userDto = (UserDto) session.getAttribute("userDto");
     
     EstimateDto estimateDto = requestEstimateDto.getEstimateDto();
     estimateDto.setStatus(EstimateDto.Status.RECEIVED);
+    
     if(userDto!=null)
       estimateDto.setUserSeq(userDto.getUserSeq());
-    List<String> imageList =  requestEstimateDto.getImageList();
     
-    System.out.println(estimateDto.toString());
+    List<String> imageList =  requestEstimateDto.getImageList();
       
     try {
-      estimateService.registerEstimate(estimateDto,imageList);
+      int result = estimateService.registerEstimate(estimateDto,imageList);
+      smsService.sendEstimateSeq(estimateDto.getPhone(), result);
       return ResponseEntity.status(HttpStatus.OK).build();
-    } catch (SQLException e) {
+    } catch (SQLException | IOException | RestClientException | InvalidKeyException | NoSuchAlgorithmException | URISyntaxException e) {
       e.printStackTrace();
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(headers).body("서버 장애 발생.");
-    } catch (IOException e) {
-      e.printStackTrace();
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(headers).body("서버 장애 발생.");
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
     
   }
@@ -76,30 +86,40 @@ public class EstimateController {
   public ResponseEntity<?> speedRegisterEstimate(
       @RequestParam("phone") String phone,
       @RequestParam("cleaningService") String cleaningService,
-      @RequestParam("region") String region) {
+      @RequestParam("region") String region,
+      HttpServletRequest request,
+      HttpSession session) {
     
-    System.out.println("EstimateController.speedRegisterEstimate() 실행");
+    String clientIp = request.getRemoteAddr();
+    if (!rateLimiterService.isAllowed(clientIp)) {
+      return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+    }
     
-    EstimateDto estimateDTO = new EstimateDto(phone, cleaningService, region, Status.RECEIVED);
+    EstimateDto estimateDto = new EstimateDto(phone, cleaningService, region, Status.RECEIVED);
     
+    UserDto userDto = (UserDto) session.getAttribute("userDto");
+    if(userDto!=null)
+      estimateDto.setUserSeq(userDto.getUserSeq());
+
     try {
-      estimateService.registerEstimate(estimateDTO);
+      int result = estimateService.registerEstimate(estimateDto);
+      smsService.sendEstimateSeq(estimateDto.getPhone(), result);
+
       return ResponseEntity.status(HttpStatus.OK).build();
       
-    } catch (SQLException e) {
+    } catch (SQLException | RestClientException | JsonProcessingException | InvalidKeyException | UnsupportedEncodingException | NoSuchAlgorithmException | URISyntaxException e) {
       e.printStackTrace();
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     } 
-    
   }
 
   @GetMapping("/getAllEstimate")
-  public ResponseEntity<?> getAllEstimate(HttpServletRequest req, HttpServletResponse res) {
+  public ResponseEntity<?> getAllEstimate(HttpServletRequest request, HttpServletResponse res) {
       HttpHeaders headers = new HttpHeaders();
       headers.add("Content-Type", "application/json; charset=UTF-8");
 
       System.out.println("EstimateController.getAllEstimate() 실행");
-      int page = Integer.parseInt(req.getParameter("page"));
+      int page = Integer.parseInt(request.getParameter("page"));
       List<EstimateDto> list = null;
       try {
           list = estimateService.getAllEstimate(page);

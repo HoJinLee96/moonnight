@@ -23,7 +23,7 @@ public class DataSourceConfig {
 	@Bean(destroyMethod = "close")
 	public DataSource dataSource() {
 		DataSource ds = new DataSource();
-		ds.setDriverClassName("com.mysql.jdbc.Driver"); // JDBC 드라이버 클래스를 MySQL 드라이버 클래스로 지정.
+		ds.setDriverClassName("com.mysql.cj.jdbc.Driver"); // JDBC 드라이버 클래스를 MySQL 드라이버 클래스로 지정.
 		ds.setUrl(url); // JDBC URL 지정
 		ds.setUsername(username);
 		ds.setPassword(password);
@@ -34,21 +34,6 @@ public class DataSourceConfig {
 		ds.setTimeBetweenEvictionRunsMillis(1000 * 10);
 		return ds;
 	}
-  
-//  @Bean(destroyMethod = "close")
-//  public DataSource dataSource() {
-//      DataSource ds = new DataSource();
-//      ds.setDriverClassName("com.mysql.jdbc.Driver"); // JDBC 드라이버 클래스를 MySQL 드라이버 클래스로 지정.
-//      ds.setUrl("jdbc:mysql://spring-webservice.cp4qqoi4m1yv.ap-northeast-2.rds.amazonaws.com:3306"); // JDBC URL 지정 //?useSSL=no
-//      ds.setUsername("admin");
-//      ds.setPassword("Leeought21");
-//      ds.setInitialSize(10);
-//      ds.setMaxActive(10);
-//      ds.setTestWhileIdle(true);
-//      ds.setMinEvictableIdleTimeMillis(1000 * 60 * 3);
-//      ds.setTimeBetweenEvictionRunsMillis(1000 * 10);
-//      return ds;
-//  }
 
 	@Bean
 	public PlatformTransactionManager transactionManage() {

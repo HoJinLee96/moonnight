@@ -23,7 +23,7 @@ import service.RateLimiterService;
 import service.VerificationServices;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/sms")
 public class NaverSmsController {
   private final NaverSmsService smsService;
   private final VerificationServices verificationServices;
@@ -37,8 +37,8 @@ public class NaverSmsController {
     this.rateLimiterService = rateLimiterService;
   }
 
-  @PostMapping("/verify/sendsms")
-  public ResponseEntity<?> sendSms(@RequestParam String reqPhone, HttpServletRequest request)
+  @PostMapping("/send/verify")
+  public ResponseEntity<?> sendVerify(@RequestParam String reqPhone, HttpServletRequest request)
       throws UnsupportedEncodingException, URISyntaxException, NoSuchAlgorithmException,
       JsonProcessingException, RestClientException, InvalidKeyException,
       java.security.InvalidKeyException {

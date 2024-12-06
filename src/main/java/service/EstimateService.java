@@ -33,10 +33,11 @@ public class EstimateService {
   }
 
   @Transactional
-  public boolean registerEstimate(EstimateDto estimateDto, List<String> imageList)
-      throws SQLException, IOException {
+  public int registerEstimate(EstimateDto estimateDto, List<String> imageList) throws SQLException, IOException {
+    
     if (imageList != null) {
       List<File> imageFilesList = new ArrayList<>();
+      
       for (String base64Image : imageList) {
         String[] parts = base64Image.split(",");
         String imageData = parts[1];
@@ -53,20 +54,23 @@ public class EstimateService {
       String imagesPath = awss3Dao.uploadImagesToS3(imageFilesList, estimateDto.getPhone());
       estimateDto.setImagesPath(imagesPath);
     }
+    
     int result = estimateDao.registerEstimate(estimateDto);
+    
     if (result == 0) {
       throw new SQLException("estimate 등록 실패");
     }
-    return true;
+    
+    return result;
   }
   
   @Transactional
-  public boolean registerEstimate(EstimateDto estimateDto)throws SQLException {
+  public int registerEstimate(EstimateDto estimateDto)throws SQLException {
     int result = estimateDao.registerEstimate(estimateDto);
     if (result == 0) {
       throw new SQLException("estimate 등록 실패");
     }
-    return true;
+    return result;
   }
 
   public Optional<EstimateDto> getEstimate(int estimateSeq) throws SQLException {

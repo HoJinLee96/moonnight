@@ -19,7 +19,7 @@ function sendSms() {
 	} 
 	else {
 		var xhr = new XMLHttpRequest();
-		xhr.open('POST', '/api/verify/sendsms', true);
+		xhr.open('POST', '/sms/send/verify', true);
 		xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 		
 	    xhr.onload = function() {
@@ -58,7 +58,7 @@ function sendSms() {
 			return;
 		}
 		var xhr = new XMLHttpRequest();
-		xhr.open('POST', '/api/verify/comparecode', true); 
+		xhr.open('POST', '/verify/comparecode', true); 
 		xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 
 	    xhr.onload = function() {
