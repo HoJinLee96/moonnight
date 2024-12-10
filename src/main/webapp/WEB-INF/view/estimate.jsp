@@ -8,20 +8,16 @@
 <title>견적 문의</title>
 <style type="text/css">
 
-#mainContainer{
-	max-width: 1350px;
+.container{
+	width: 1350px;
 	margin: 0 auto;
-	padding-top: 50px;
-	min-height: 1080px;
+	padding: 50px;
 }
-#mainContainer h1{
+.container h1{
     border-bottom: 4px solid #20367a;
     padding-bottom: 15px;
     margin-bottom: 20px;
     }
-#formContainer{
-
-} 
 #estimate{
 	display: flex;
 }
@@ -139,10 +135,11 @@ cursor:pointer;
     border: none;
     background: none;
     font-size: 25px;
+    color: white;
 }
 .image-preview button:hover{
-cursor:pointer;
-color:#efefef;
+	cursor:pointer;
+	color:#c4c4c4;
 }
 #dal6{
 width: 730px;
@@ -170,6 +167,10 @@ border: 1px solid #20367a;
 #receiveAgreeMessage, #emailMessage, #agreementMessage{
 color: red;
 }
+#headerContainer, .background-image, .top_inner, .top_main, .footer{
+min-width: 1450px !important;
+} 
+
 </style>
 
 
@@ -210,7 +211,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <body>
 <%@ include file = "main_header.jsp" %>
 
-	<div id="mainContainer">
+	<div class="container">
 
 		<h1>청소 견적 문의하기</h1>
 		<div id="formContainer">
@@ -388,16 +389,21 @@ function handleImageSelection(event) {
     const files = Array.from(event.target.files);
     const remainingSlots = MAX_IMAGES - selectedImages.length;
 
-    // 추가할 이미지가 최대 개수를 초과할 경우, 남은 슬롯만큼만 자르기
+    // 추가할 이미지가 최대 개수를 초과할 경우
     if (files.length > remainingSlots) {
-        alert('최대 ${MAX_IMAGES}장의 이미지만 업로드할 수 있습니다.');
-        files.splice(remainingSlots);  // 남은 슬롯 만큼만 파일을 선택
+        alert('최대 10장의 이미지 업로드 할 수 있습니다.');
+        // UX상 맞지않는거 같아서 주석 처리
+        /* files.splice(remainingSlots); */  // 남은 슬롯 만큼만 파일을 선택
+        return;
     }
-
-    files.forEach(file => {
+    for (const file of files) {
         if (file.size > MAX_FILE_SIZE) {
-            alert('이미지 파일의 크기는 최대 10MB까지 허용됩니다.');
-        } else {
+            alert('이미지 1장 최대 용량은 10MB입니다.\n제외 후 업로드 진행됩니다.');
+            break;
+        }
+    }
+    files.forEach(file => {
+         if(file.size < MAX_FILE_SIZE) {
             selectedFiles.push(file); // 선택된 파일을 배열에 저장
             compressAndPreviewImage(file);  // 파일 압축 및 미리보기
         }
@@ -590,113 +596,6 @@ function sendEstimateToServer(requestEstimateDto) {
         alert('제출에 실패했습니다.');
     });
 }
-
-
-/* //폼 검사 및 제출
-$('#estimate').on('submit', function(event) {
-	  event.preventDefault(); // 폼 제출을 막음
-	  
-	  const agreementCheck = document.getElementById('agreement');
-	  const agreementMessage = document.getElementById('agreementMessage');
-	  
-	  if(!agreementCheck.checked){
-		  agreementMessage.style.color="red";
-		  agreementMessage.textContent = "개인정보처리방침에 동의해 주세요.";
-		  return;
-	  }else{
-		  agreementMessage.textContent ="";
-	  }
-	  
-	  //휴대폰
-	  let phone = document.getElementById("phone").value;
-	  const receiveAgreeMessage = document.getElementById('receiveAgreeMessage');
-	  if(phone.length<13){
-		  receiveAgreeMessage.innerText="휴대폰 번호를 확인해 주세요.";
-	  }else{
-		  receiveAgreeMessage.innerText="";
-	  }
-	  
-	  //주소 값 가져옴
-	  let mainAddress = document.getElementById("mainAddress").value;
-	  //주소 에러 메시지 요소
-	  const addressMessage = document.getElementById('addressMessage');
-	  
-	  if(mainAddress.length===0){
-		  addressMessage.style.color="red";
-		  addressMessage.innerText="주소를 입력 해주세요.";
-		  return;
-	  }else{
-		  addressMessage.innerText="";
-	  }
-
-	  // 모든 체크박스를 가져옴
-	  const checkboxes = document.querySelectorAll('.agreeInput');
-	  let checkedCount = 0;
-
-	  // 선택된 체크박스 수를 셈
-	  checkboxes.forEach(function(checkbox) {
-	    if (checkbox.checked) {
-	      checkedCount++;
-	    }
-	  });
-
-	  // 최소 1개
-	  if (checkedCount < 1) {
-		  receiveAgreeMessage.textContent = "수신 방법을 최소 1개를 선택해야 합니다.";
-		  return;
-	  } else {
-		  receiveAgreeMessage.textContent = "";
-	  }
-	    submitForm(event);
-});
-function submitForm(event) {
-	event.preventDefault();
-	
-    var form = document.getElementById('estimate');
-    var formData = new FormData(form);
-    var data = {};
-
-    // Add files to formData
-    for (var i = 1; i <= 10; i++) {
-        var fileInput = document.getElementById('fileInputHidden' + i);
-        if (fileInput.value) {
-            // base64 문자열을 Blob으로 변환하여 추가
-            var byteString = atob(fileInput.value.split(',')[1]);
-            var mimeString = fileInput.value.split(',')[0].split(':')[1].split(';')[0];
-            var ab = new ArrayBuffer(byteString.length);
-            var ia = new Uint8Array(ab);
-            for (var j = 0; j < byteString.length; j++) {
-                ia[j] = byteString.charCodeAt(j);
-            }
-            var blob = new Blob([ab], { type: mimeString });
-            
-            // Blob을 FormData 대신 JSON 형식으로 추가할 수 있도록 base64로 다시 인코딩하여 객체에 저장
-            var reader = new FileReader();
-            reader.readAsDataURL(blob);
-            reader.onloadend = function() {
-                data['image' + i] = reader.result;
-                console.log(i + "번째 사진 추가");
-            };
-        }
-    }
-	
-    $.ajax({
-        url: '/estimate/register',
-        type: 'POST',
-        processData: false,
-        contentType: false,
-        data: formData,
-        success: function(response) {
-            alert("이용해 주셔서 감사합니다.\n빠른 답변 드리겠습니다.");
-            window.location.href = '/home';
-        },
-        error: function(xhr, status, error) {
-            console.log(xhr);
-            console.log(status);
-            console.error(error);
-        }
-    });
-} */
 </script>
 
 
