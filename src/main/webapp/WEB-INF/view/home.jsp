@@ -35,6 +35,7 @@
 	min-width: 980px;
     max-width: 1900px;
 	text-align: center;
+	white-space: nowrap;
 }
 #speedEstimate form{
 	display: inline;
