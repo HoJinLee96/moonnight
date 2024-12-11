@@ -28,16 +28,12 @@
     margin: 0px auto;
 	line-height: 60px;
 	background-color: #dbf1fd;
-	text-align: center;
 }
 #speedEstimate{
 	font-size: 14px;
-	display: inline;
-/* 	width: 100vw;
-	min-width: 980px;
-    max-width: 1900px;
-	text-align: center; 
-	white-space: nowrap;*/
+	display: flex;
+    justify-content: center;
+    align-items: center;
 }
 #speedEstimate form{
 	display: inline;
