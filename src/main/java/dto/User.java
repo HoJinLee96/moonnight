@@ -6,7 +6,7 @@ public abstract class User {
   private Status status;
 
   public enum Status {
-    NORMAL, STAY, STOP;
+    NORMAL, STAY, STOP, MASTER;
     
   }
 

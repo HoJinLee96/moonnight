@@ -14,9 +14,16 @@
 }
 *{font-family: 'SF_HambakSnow', sans-serif;}
 
+body{
+    min-width: 980px;
+    max-width: 1900px;
+    width: 100vw;
+ 	margin: 0px auto;
+}
+
 #headerContainer{
-	max-width:1920px;
-	min-width:800px;
+	max-width:1900px;
+	min-width:980px;
 	margin: 0px auto;
 	border-bottom: 1.5px solid #efefef;
 	padding-bottom: 15px;

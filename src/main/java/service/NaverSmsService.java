@@ -139,6 +139,8 @@ public class NaverSmsService {
       System.out.println("현재시간 발생 : " + time);
 
       // 수신사 생성
+      phoneNumber = phoneNumber.replaceAll("-", "");
+      System.out.println(phoneNumber);
       MessageDto messageDto = new MessageDto(phoneNumber);
       List<MessageDto> messages = new ArrayList<>();
       messages.add(messageDto);

@@ -46,13 +46,14 @@ public class LoginLogDao {
     }
   
   public int loginFail(User user, String ip, String reason) throws SQLException {
-    String sql = "insert into login_fail_log (provider,id,ip,reason) values (?,?,?,?)";
+    String sql = "insert into login_fail_log (provider,id,ip,reason,create_at) values (?,?,?,?,?)";
     try (Connection con = dataSource.getConnection();
         PreparedStatement pst = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);) {
       pst.setString(1, user.getProvider());
       pst.setString(2, user.getEmail());
       pst.setString(3, ip);
       pst.setString(4, reason);
+      pst.setTimestamp(5, Timestamp.valueOf(LocalDateTime.now()));
       pst.executeUpdate();
       ResultSet generatedKeys = pst.getGeneratedKeys();
       if (generatedKeys.next()) {

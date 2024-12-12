@@ -142,9 +142,9 @@ cursor:pointer;
 	color:#c4c4c4;
 }
 #dal6{
-width: 730px;
-height: 280px;
-margin-top: 50px;
+	width: 730px;
+	height: 280px;
+	margin-top: 50px;
 }
 	
 .custom-image-label {
@@ -160,16 +160,21 @@ margin-top: 50px;
 }
 
 .custom-image-label:hover {
-border: 1px solid #20367a;
+	border: 1px solid #20367a;
     background-color: white;
     color:#20367a;
 }
 #receiveAgreeMessage, #emailMessage, #agreementMessage{
-color: red;
+	color: red;
 }
 #headerContainer, .background-image, .top_inner, .top_main, .footer{
-min-width: 1450px !important;
+	min-width: 1450px !important;
 } 
+.flexTd{
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
 
 </style>
 
@@ -229,7 +234,7 @@ document.addEventListener("DOMContentLoaded", function() {
 							<td class="tableHeader">연락처<span style="color: red">＊</span> <span id="receiveAgreeMessage"></span></td>
 						</tr>
 						<tr>
-							<td>
+							<td class = "flexTd">
 							<input type="text" id="phone" oninput="formatPhoneNumber(this)" maxlength="13" value="010-" required>
 							수신 동의 :
 							<input type="checkbox" class="agreeInput" id="eamilAgree">

@@ -195,7 +195,7 @@ display:inline;
 position: relative;
 }
 #passwordViewButton{
-background-image: url('http://localhost:8086/static/img/eyeHiddenIcon.png'); 
+background-image: url('https://chamman.s3.ap-northeast-2.amazonaws.com/static/img/eyeHiddenIcon.png'); 
 background-size: cover;
 width: 17px;
 height: 17px;
@@ -252,10 +252,10 @@ cursor: pointer;
 	    <div id = "underline-text"></div>
 	    <div id = "OAutoLoginBlcok">
 	        <a href="/kakao/login/url" id="kakao-login">
-        <img src="static/img/kakaoLogin.png" alt="Kakao Login Logo">
+        <img src="https://chamman.s3.ap-northeast-2.amazonaws.com/static/img/kakaoLogin.png" alt="Kakao Login Logo">
     </a>
 	 <a href="/naver/login/url" id="naver-login">
-        <img src="static/img/naverLogin.png" alt="Naver Login Logo">
+        <img src="https://chamman.s3.ap-northeast-2.amazonaws.com/static/img/naverLogin.png" alt="Naver Login Logo">
     </a>
 
     </div>
@@ -300,10 +300,10 @@ passwordViewButton.addEventListener('click', function() {
 function view(input,button){
     if (input.type === 'password') {
     	input.type = 'text';
-    	button.style.backgroundImage= "url('http://localhost:8086/static/img/eyeIcon.png')";
+    	button.style.backgroundImage= "url('https://chamman.s3.ap-northeast-2.amazonaws.com/static/img/eyeIcon.png')";
 	} else {
     	input.type = 'password';
-    	button.style.backgroundImage= "url('http://localhost:8086/static/img/eyeHiddenIcon.png')";
+    	button.style.backgroundImage= "url('https://chamman.s3.ap-northeast-2.amazonaws.com/static/img/eyeHiddenIcon.png')";
     }
 }
 function init(input,button){

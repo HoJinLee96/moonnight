@@ -1,19 +1,16 @@
 package config;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.multipart.MultipartResolver;
-import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 import org.springframework.web.servlet.config.annotation.DefaultServletHandlerConfigurer;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ViewResolverRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import intercepter.LoginAuthInterceptor;
+import intercepter.MasterAuthInterceptor;
 import intercepter.OAuthRefreshInterceptor;
-import jakarta.servlet.MultipartConfigElement;
 
 @Configuration
 @EnableWebMvc
@@ -24,6 +21,8 @@ public class MvcConfig implements WebMvcConfigurer {
 	private LoginAuthInterceptor loginAuthInterceptor;
 	@Autowired
 	private OAuthRefreshInterceptor oAuthRefreshInterceptor;
+	@Autowired
+	private MasterAuthInterceptor masterAuthInterceptor;
 
 	@Override
 	public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
@@ -39,6 +38,7 @@ public class MvcConfig implements WebMvcConfigurer {
 	public void addInterceptors(InterceptorRegistry registry) {
 	  registry.addInterceptor(oAuthRefreshInterceptor);
 	  registry.addInterceptor(loginAuthInterceptor).addPathPatterns("/login","/my/**","/verifyUser");
+	  registry.addInterceptor(masterAuthInterceptor).addPathPatterns("/master/**").excludePathPatterns("/master/login");
 	}
     
 

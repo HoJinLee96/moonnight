@@ -59,7 +59,6 @@ public class UserInfoController {
       @RequestParam("password") String reqPassword,
       HttpSession session, HttpServletRequest req) {
     
-    System.out.println("LoginController.loginByEmail() 시작");
     HttpHeaders headers = new HttpHeaders();
     headers.add("Content-Type", "application/json; charset=UTF-8");
     String ip = HttpUtil.getClientIp(req);

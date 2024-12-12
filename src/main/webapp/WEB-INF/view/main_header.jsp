@@ -40,7 +40,7 @@ body{
     width: 100vw;
     height:125px;
     margin: 0 auto;
-    background-image: url('/static/img/headerBackground2.jpg'); /* 배경 이미지 경로 */
+    background-image: url('https://chamman.s3.ap-northeast-2.amazonaws.com/static/img/headerBackground2.jpg'); /* 배경 이미지 경로 */
     background-size: cover;
     /* background-position: center; */
     z-index: 1; /* 로고보다 뒤에 배치되도록 z-index 설정 */
@@ -148,7 +148,7 @@ min-height: 1080px;
 	<div class = "top_main">
 		<div id="log_div">
 			<a id="logopng" href="/">
-				<img src="/static/img/headerLogo.png" alt="Logo" class="logopng">
+				<img src="https://chamman.s3.ap-northeast-2.amazonaws.com/static/img/headerLogo.png" alt="Logo" class="logopng">
 			</a>
 		</div>
 			<div id="main_nav_div">

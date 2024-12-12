@@ -103,7 +103,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const navOffsetTop = nav.offsetTop;
 	
     window.addEventListener('scroll', function () {
-    /* var scrollLeft = window.scrollX; */
         if (window.scrollY >= navOffsetTop) {
             nav.classList.add('fixed-top');
             container.style.paddingTop = '90px';
@@ -111,7 +110,6 @@ document.addEventListener('DOMContentLoaded', function () {
             nav.classList.remove('fixed-top');
             container.style.paddingTop = '30px';
         }
-        /* nav.style.left = -scrollLeft + 'px'; */
 
     });
 });
@@ -199,11 +197,11 @@ document.addEventListener('DOMContentLoaded', function () {
 	<div class="container">
 
 		<div class="mainImg" id="img1">
-			<img src="static/img/dal1.png" alt="dal1">
-			<img src="static/img/dal2.png" alt="dal2">
-			<img src="static/img/dal3.png" alt="dal4">
-			<img src="static/img/dal4.png" alt="dal4">
-			<img src="static/img/dal5.png" alt="dal5">	
+			<img src="https://chamman.s3.ap-northeast-2.amazonaws.com/static/img/dal1.png" alt="dal1">
+			<img src="https://chamman.s3.ap-northeast-2.amazonaws.com/static/img/dal2.png" alt="dal2">
+			<img src="https://chamman.s3.ap-northeast-2.amazonaws.com/static/img/dal3.png" alt="dal4">
+			<img src="https://chamman.s3.ap-northeast-2.amazonaws.com/static/img/dal4.png" alt="dal4">
+			<img src="https://chamman.s3.ap-northeast-2.amazonaws.com/static/img/dal5.png" alt="dal5">	
 		</div>
 
 	</div>
@@ -217,8 +215,7 @@ document.addEventListener('DOMContentLoaded', function () {
 function formatPhoneNumber(input) {
 	let value = input.value.replace(/[^0-9]/g, ''); 
 	let formattedValue = value;
-
-	if (value.length >= 4) {
+	if (value.length >= 5) {
 		formattedValue = value.slice(0, 4) + '-' + value.slice(4);
 	}
 
