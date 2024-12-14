@@ -1,5 +1,6 @@
 package dao;
 
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -9,6 +10,7 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import javax.sql.DataSource;
@@ -189,33 +191,28 @@ public class EstimateDao {
     return "";
   }
 
-  public List<EstimateDto> getAllEstimate(int page) throws SQLException {
+  public List<EstimateDto> getAllEstimate(int page, int size) throws SQLException {
 
-    String sql = "SELECT * FROM estimate ORDER BY created_at DESC LIMIT 50 OFFSET " + (page - 1) * 50;
+    String sql = "SELECT * FROM estimate ORDER BY created_at DESC, estimate_seq DESC LIMIT "+size+" OFFSET " + (page - 1) * size;
     try (Connection con = dataSource.getConnection();
         PreparedStatement pst = con.prepareStatement(sql);
         ResultSet rs = pst.executeQuery();) {
       List<EstimateDto> list = new ArrayList<>();
-      if (rs.next()) {
-        list = createResultSetToEstimates(rs);
-      }
+      list = createResultSetToEstimates(rs);
       return list;
     }
   }
 
   public List<EstimateDto> getEstimateByStatus(int chepter, Status status) throws SQLException {
 
-    String sql = "SELECT * FROM estimate WHERE status = ? ORDER BY created_at DESC LIMIT 50 OFFSET "
-        + chepter * 50;
+    String sql = "SELECT * FROM estimate WHERE status = ? ORDER BY created_at DESC LIMIT 50 OFFSET "+ chepter * 50;
 
     try (Connection con = dataSource.getConnection();
         PreparedStatement pst = con.prepareStatement(sql)) {
       pst.setString(1, status.name());
       try (ResultSet rs = pst.executeQuery()) {
         List<EstimateDto> list = new ArrayList<>();
-        if (rs.next()) {
-          list = createResultSetToEstimates(rs);
-        }
+        list = createResultSetToEstimates(rs);
         return list;
       }
     }

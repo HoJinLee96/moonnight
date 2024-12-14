@@ -290,7 +290,7 @@ document.addEventListener("DOMContentLoaded", function() {
 						multiple style="display: none;"> <label for="image-input"
 						class="custom-image-label">사진 선택</label>
 					<div id="preview"></div>
-					<img id="dal6" src="static/img/dal6.png" alt="dal6">
+					<img id="dal6" src="https://chamman.s3.ap-northeast-2.amazonaws.com/static/img/dal6.png" alt="dal6">
 					<div class="buttonDiv">
 						<div id="agreeMentDiv">
 						<p id="agreementMessage"> </p>

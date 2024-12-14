@@ -15,10 +15,10 @@ public class MasterAuthInterceptor implements HandlerInterceptor{
       throws Exception {
     HttpSession session = req.getSession();
     User user = (User)session.getAttribute("masterDto");
-    if(user==null) {
-      res.sendRedirect("/master/login");
-      return false;
-    }
+//    if(user==null) {
+//      res.sendRedirect("/master/login");
+//      return false;
+//    }
     return true;
     
   }

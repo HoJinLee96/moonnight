@@ -127,8 +127,8 @@ public class EstimateService {
     return true;
   }
   
-  public List<EstimateDto> getAllEstimate(int page) throws SQLException {
-    return estimateDao.getAllEstimate(page);
+  public List<EstimateDto> getAllEstimate(int page,int size) throws SQLException {
+    return estimateDao.getAllEstimate(page,size);
   }
 
   public int getCountAll() throws SQLException {

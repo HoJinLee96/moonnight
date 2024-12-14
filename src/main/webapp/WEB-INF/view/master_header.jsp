@@ -16,25 +16,25 @@
 
 body{
     min-width: 980px;
-    max-width: 1900px;
-    width: 100vw;
+    max-width: 1920px;
+    width: 99vw;
  	margin: 0px auto;
+ 	min-height: 1080px;
 }
 
 #headerContainer{
-	max-width:1900px;
+	max-width:1920px;
 	min-width:980px;
 	margin: 0px auto;
 	border-bottom: 1.5px solid #efefef;
-	padding-bottom: 15px;
+	padding: 5px 50px 15px 50px;
 }
 .top_inner{
     display: flex;
     justify-content: flex-end;
-	padding: 0px 20px;
-	max-width: 1200px;
-	margin: 0 auto;
-	min-width: 800px;
+    max-width: 1920px;
+    margin: 0 auto;
+    min-width: 800px;
 }
 
 .top_nav ul{
@@ -57,7 +57,6 @@ body{
 	max-width: 1920px;
 	min-width: 800px;
 	margin: 0 auto;
-	padding: 0px 20px;
 	justify-content: space-between;
 }
 #log_div{
@@ -88,22 +87,14 @@ body{
 	margin-top: auto;
 	margin-bottom: 6px;
 }
+.main_nav li{
+font-size: 23px;
+padding-left: 20px;
+cursor: pointer;
+}
 .main_nav a{
 text-decoration: none;
 color: black;
-font-size: 23px;
-padding-left: 20px;
-
-}
-#logo1{
-font-size: 50px;
-}
-#logo2{
-font-size: 45px;
-color: #fef200;
-}
-#logo3{
-font-size: 50px;
 }
 
 </style>
@@ -114,6 +105,7 @@ font-size: 50px;
 	<div class = "top_inner">
 		<nav class = "top_nav">
 			<ul>
+			<li><a href="/master/logout">로그아웃</a></li>
 			</ul>
 		</nav>
 	</div>
@@ -121,13 +113,17 @@ font-size: 50px;
 		<div id="log_div">
 			<ul class= "logo">
 				<li>
-					<a id="logo1" href="/master/home">달밤</a><a id="logo2" href="/master/home">N</a><a id="logo3" href="/master/home">청소</a>
+					<!-- <a id="logo1" href="/master/home">달밤</a><a id="logo2" href="/master/home">N</a><a id="logo3" href="/master/home">청소</a> -->
+				<a id="logopng" href="/master/home">
+					<img src="https://chamman.s3.ap-northeast-2.amazonaws.com/static/img/headerLogo2.png" alt="Logo">
+				</a>
 				</li>
 			</ul>
 		</div>
 			<div id="main_nav_div">
 			<ul class= "main_nav">
 				<li><a href="/master/estimateView">모든 견적서</a></li>
+				<li>검색</li>
 			</ul>
 		</div>
 	</div>

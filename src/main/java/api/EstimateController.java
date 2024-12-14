@@ -117,17 +117,26 @@ public class EstimateController {
   public ResponseEntity<?> getAllEstimate(HttpServletRequest request, HttpServletResponse res) {
       HttpHeaders headers = new HttpHeaders();
       headers.add("Content-Type", "application/json; charset=UTF-8");
-
-      System.out.println("EstimateController.getAllEstimate() 실행");
-      int page = Integer.parseInt(request.getParameter("page"));
+      
+      String reqPage = request.getParameter("page");
+      String reqSize = request.getParameter("size");
+      
+      if(reqPage==null || reqPage=="") {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+      }
+      if(reqSize==null || reqPage=="") {
+        reqSize = "50";
+      }
+      
+      int page = Integer.parseInt(reqPage);
+      int size = Integer.parseInt(reqSize);
+      
       List<EstimateDto> list = null;
       try {
-          list = estimateService.getAllEstimate(page);
+          list = estimateService.getAllEstimate(page,size);
       } catch (SQLException e) {
           e.printStackTrace();
-          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                               .headers(headers)
-                               .body("{\"error\": \"An error occurred while fetching the estimates.\"}");
+          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
       }
 
       ObjectMapper objectMapper = new ObjectMapper();
@@ -137,14 +146,10 @@ public class EstimateController {
           jsonResponse = objectMapper.writeValueAsString(list);
       } catch (Exception e) {
           e.printStackTrace();
-          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                               .headers(headers)
-                               .body("{\"error\": \"An error occurred while processing the estimates.\"}");
+          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
       }
 
-      return ResponseEntity.ok()
-                           .headers(headers)
-                           .body("{\"list\": " + jsonResponse + "}");
+      return ResponseEntity.ok().headers(headers).body("{\"list\": " + jsonResponse + "}");
   }
       
   @GetMapping("/getCountAll")
