@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import dao.AWSS3Dao;
 import dao.EstimateDao;
 import dto.EstimateDto;
+import dto.EstimateSearchRequest;
 import dto.RequestEstimateDto;
 import exception.AccessDeniedException;
 import exception.NotFoundException;
@@ -74,7 +76,7 @@ public class EstimateService {
   }
 
   public Optional<EstimateDto> getEstimate(int estimateSeq) throws SQLException {
-    return estimateDao.getEstimate(estimateSeq);
+    return estimateDao.getEstimateByEstimateSeq(estimateSeq);
   }
   
   public List<RequestEstimateDto> getEstimateByUserSeq(int userSeq) throws SQLException, IOException {
@@ -101,7 +103,7 @@ public class EstimateService {
 
   @Transactional
   public boolean updateEstimate(int userSeq, EstimateDto newEstimateDto) throws SQLException {
-    EstimateDto oldEstimateDto = estimateDao.getEstimate(newEstimateDto.getEstimateSeq())
+    EstimateDto oldEstimateDto = estimateDao.getEstimateByEstimateSeq(newEstimateDto.getEstimateSeq())
         .orElseThrow(() -> new NotFoundException());
     if (oldEstimateDto.getUserSeq() != userSeq) {
       throw new AccessDeniedException();
@@ -116,7 +118,7 @@ public class EstimateService {
   @Transactional
   public boolean deleteEstimate(int userSeq, int estimateSeq) throws SQLException {
     EstimateDto estimateDto =
-        estimateDao.getEstimate(estimateSeq).orElseThrow(() -> new NotFoundException());
+        estimateDao.getEstimateByEstimateSeq(estimateSeq).orElseThrow(() -> new NotFoundException());
     if (estimateDto.getUserSeq() != userSeq) {
       throw new AccessDeniedException();
     }
@@ -127,13 +129,32 @@ public class EstimateService {
     return true;
   }
   
-  public List<EstimateDto> getAllEstimate(int page,int size) throws SQLException {
-    return estimateDao.getAllEstimate(page,size);
+  public HashMap<String,Object> getEstimateSearch(EstimateSearchRequest estimateSearchRequest) throws SQLException {
+    List<EstimateDto> list = estimateDao.getEstimateSearch(estimateSearchRequest);
+    int count = estimateDao.getCountEstimateSearch(estimateSearchRequest);
+    HashMap<String,Object> result = new HashMap<String,Object>();
+    result.put("list", list);
+    result.put("count", count);
+    return result;
   }
 
-  public int getCountAll() throws SQLException {
-    return estimateDao.getCountAll();
+  public HashMap<String, Integer> getCountAllStatus() throws SQLException {
+    int allCount = estimateDao.getCountByStatus("ALL");
+    int receivedCount = estimateDao.getCountByStatus("RECEIVED");
+    int inprogressCount = estimateDao.getCountByStatus("IN_PROGRESS");
+    int completedCount = estimateDao.getCountByStatus("COMPLETED");
+    int deleteCount = estimateDao.getCountByStatus("DELETE");
+    HashMap<String, Integer> countMap = new HashMap<String,Integer>();
+    countMap.put("ALL", allCount);
+    countMap.put("RECEIVED", receivedCount);
+    countMap.put("IN_PROGRESS", inprogressCount);
+    countMap.put("COMPLETED", completedCount);
+    countMap.put("DELETE", deleteCount);
+    return countMap;
   }
-
-
+  
+  public int getCountStatus(String status) throws SQLException {
+    return estimateDao.getCountByStatus(status);
+  }
+  
 }

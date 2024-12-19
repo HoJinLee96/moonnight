@@ -1,6 +1,5 @@
 package dao;
 
-import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,7 +9,6 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import javax.sql.DataSource;
@@ -18,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import dto.EstimateDto;
+import dto.EstimateSearchRequest;
 import dto.EstimateDto.Status;
 
 @Repository
@@ -77,7 +76,7 @@ public class EstimateDao {
     }
   }
   
-  public Optional<EstimateDto> getEstimate(int estimateSeq) throws SQLException{
+  public Optional<EstimateDto> getEstimateByEstimateSeq(int estimateSeq) throws SQLException{
     String sql = "select * from estimate where estimate_seq=?";
     try (Connection con = dataSource.getConnection();
         PreparedStatement pst = con.prepareStatement(sql);) {
@@ -162,17 +161,27 @@ public class EstimateDao {
   }
   
   
-  public int getCountAll() throws SQLException {
-    String sql = "SELECT COUNT(*) FROM estimate";
-    try (Connection con = dataSource.getConnection();
-        PreparedStatement pst = con.prepareStatement(sql);
-        ResultSet rs = pst.executeQuery()) {
-      if (rs.next()) {
-        return rs.getInt(1);
-      } else {
-        return 0;
-      }
+  public int getCountByStatus(String status) throws SQLException {
+    String sql;
+    if ("ALL".equals(status)) {
+      sql = "SELECT COUNT(*) FROM estimate WHERE status IN ('RECEIVED', 'IN_PROGRESS', 'COMPLETED', 'DELETE')";
+    } else {
+      sql = "SELECT COUNT(*) FROM estimate WHERE status = ?";
     }
+    try (Connection con = dataSource.getConnection();
+        PreparedStatement pst = con.prepareStatement(sql)) {
+       if (!"ALL".equals(status)) {
+           pst.setString(1, status);
+       }
+
+       try (ResultSet rs = pst.executeQuery()) {
+           if (rs.next()) {
+               return rs.getInt(1);
+           } else {
+               return 0;
+           }
+       }
+   }
   }
   
 
@@ -191,15 +200,35 @@ public class EstimateDao {
     return "";
   }
 
-  public List<EstimateDto> getAllEstimate(int page, int size) throws SQLException {
+  public List<EstimateDto> getEstimateSearch(EstimateSearchRequest reqEstimateDto) throws SQLException {
 
-    String sql = "SELECT * FROM estimate ORDER BY created_at DESC, estimate_seq DESC LIMIT "+size+" OFFSET " + (page - 1) * size;
+    String sql = buildEstimateSearchQuery(reqEstimateDto);
+    System.out.println(sql);
+    try (Connection con = dataSource.getConnection();
+        PreparedStatement pst = con.prepareStatement(sql)){
+      try(ResultSet rs = pst.executeQuery()){ 
+        List<EstimateDto> list = new ArrayList<>();
+        list = createResultSetToEstimates(rs);
+        return list;
+      }
+    }
+  }
+  
+  public int getCountEstimateSearch(EstimateSearchRequest reqEstimateDto) throws SQLException {
+
+    String sql = buildEstimateSearchQuery(reqEstimateDto);
+    sql=sql.replaceFirst("SELECT \\*", "SELECT COUNT(*)");
+    if(sql.contains("LIMIT")) {
+      sql = sql.substring(0, sql.indexOf("LIMIT")).trim() + ";";
+    }
+    System.out.println(sql);
     try (Connection con = dataSource.getConnection();
         PreparedStatement pst = con.prepareStatement(sql);
-        ResultSet rs = pst.executeQuery();) {
-      List<EstimateDto> list = new ArrayList<>();
-      list = createResultSetToEstimates(rs);
-      return list;
+        ResultSet rs = pst.executeQuery()){
+      if(rs.next()) {
+        return rs.getInt(1);
+      }
+        return 0;
     }
   }
 
@@ -243,6 +272,79 @@ public class EstimateDao {
   }
   
 
+  public String buildEstimateSearchQuery(EstimateSearchRequest request) {
+    // 기본 SQL 시작 부분
+    StringBuilder sql = new StringBuilder("SELECT * FROM estimate WHERE 1=1");
 
+    // 상태 조건 추가
+    if (request.getStatus() != null && request.getStatus() != EstimateSearchRequest.Status.ALL) {
+      sql.append(" AND status = '").append(request.getStatus().name()).append("'");
+    }
+
+    // 기간 조건 추가
+    if (request.getPeriodType() != null) {
+        switch (request.getPeriodType()) {
+            case TODAY:
+                sql.append(" AND DATE(created_at) = CURDATE()");
+                break;
+            case DAYS7:
+                sql.append(" AND created_at >= NOW() - INTERVAL 7 DAY");
+                break;
+            case DAYS30:
+                sql.append(" AND created_at >= NOW() - INTERVAL 30 DAY");
+                break;
+            case MONTHLY:
+                if (request.getYear() != null && request.getMonth() != null) {
+                    sql.append(" AND DATE_FORMAT(created_at, '%Y-%m') = '")
+                       .append(request.getYear()).append("-").append(request.getMonth()).append("'");
+                }
+                break;
+            case RANGE:
+                if (request.getStartDate() != null && request.getEndDate() != null) {
+                    sql.append(" AND created_at BETWEEN '")
+                       .append(request.getStartDate()).append("' AND '").append(request.getEndDate()).append("'");
+                }
+                break;
+        }
+    }
+
+    // 검색 조건 추가
+    if (request.getSearchType() != null && request.getSearchWords() != null && !request.getSearchWords().trim().isEmpty()) {
+        switch (request.getSearchType()) {
+            case ADDRESS:
+                sql.append(" AND address LIKE '%").append(request.getSearchWords()).append("%'");
+                break;
+            case EMAIL:
+                sql.append(" AND email = '").append(request.getSearchWords()).append("'");
+                break;
+            case ESTIMATE_SEQ:
+                sql.append(" AND estimate_seq = ").append(request.getSearchWords());
+                break;
+            case NAME:
+                sql.append(" AND name LIKE '%").append(request.getSearchWords()).append("%'");
+                break;
+            case PHONE:
+                sql.append(" AND phone = '").append(request.getSearchWords()).append("'");
+                break;
+        }
+    }
+
+    // 정렬 조건 추가
+    if (request.getSortType() != null) {
+        sql.append(" ORDER BY created_at ").append(request.getSortType().name());
+    } else {
+        // 기본 정렬: 최신순
+        sql.append(" ORDER BY created_at DESC");
+    }
+
+    // 페이징 조건 추가
+    if (request.getPage() > 0 && request.getSize() > 0) {
+        int offset = (request.getPage() - 1) * request.getSize();
+        sql.append(" LIMIT ").append(offset).append(", ").append(request.getSize());
+    }
+
+    // 최종 SQL 반환
+    return sql.toString();
+}
 
 }

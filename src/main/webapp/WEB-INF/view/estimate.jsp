@@ -568,26 +568,22 @@ form.addEventListener('submit', (event) => {
         postcode: postcode,
         mainAddress: mainAddress,
         detailAddress: detailAddress,
-        content: content
+        content: content,
+        imageList: selectedImages
     };
-
-    const requestEstimateDto = {
-        estimateDto: estimateDto,
-        imageList: selectedImages // base64 인코딩된 이미지 리스트
-    };
-
+    
     // 서버로 데이터 전송 함수 호출
-    sendEstimateToServer(requestEstimateDto);
+    sendEstimateToServer(estimateDto);
 });
 
 // 서버로 데이터 전송하는 함수
-function sendEstimateToServer(requestEstimateDto) {
+function sendEstimateToServer(estimateDto) {
     fetch('/estimate/register', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestEstimateDto)
+        body: JSON.stringify(estimateDto)
     })
     .then(response => {
         if (!response.ok) {

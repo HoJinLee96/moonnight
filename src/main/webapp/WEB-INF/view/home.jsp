@@ -235,7 +235,7 @@ $('#submitButton').on('click', function(event) {
         alert('연락처를 입력해주세요.');
         return;
     }
-    phone = phoneFirst + phone;
+    phone = "-" + phoneFirst + phone;
 
     if (cleaningService === '') {
         alert('청소 서비스를 선택해주세요.');

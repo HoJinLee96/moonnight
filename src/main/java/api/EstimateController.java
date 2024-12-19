@@ -6,12 +6,15 @@ import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,6 +27,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import dto.EstimateDto;
 import dto.EstimateDto.Status;
+import dto.EstimateSearchRequest;
 import dto.RequestEstimateDto;
 import dto.UserDto;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -52,7 +56,7 @@ public class EstimateController {
 
   @PostMapping("/register")
   public ResponseEntity<?> registerEstimate(
-      @RequestBody RequestEstimateDto requestEstimateDto,
+      @RequestBody EstimateDto estimateDto,
       HttpServletRequest request, 
       HttpSession session) {
     
@@ -63,13 +67,13 @@ public class EstimateController {
     
     UserDto userDto = (UserDto) session.getAttribute("userDto");
     
-    EstimateDto estimateDto = requestEstimateDto.getEstimateDto();
+//    EstimateDto estimateDto = requestEstimateDto.getEstimateDto();
     estimateDto.setStatus(EstimateDto.Status.RECEIVED);
     
     if(userDto!=null)
       estimateDto.setUserSeq(userDto.getUserSeq());
     
-    List<String> imageList =  requestEstimateDto.getImageList();
+    List<String> imageList =  estimateDto.getImageList();
       
     try {
       int result = estimateService.registerEstimate(estimateDto,imageList);
@@ -114,26 +118,19 @@ public class EstimateController {
   }
 
   @GetMapping("/getAllEstimate")
-  public ResponseEntity<?> getAllEstimate(HttpServletRequest request, HttpServletResponse res) {
-      HttpHeaders headers = new HttpHeaders();
-      headers.add("Content-Type", "application/json; charset=UTF-8");
+  public ResponseEntity<?> getAllEstimate(@ModelAttribute EstimateSearchRequest estimateSearchRequest,HttpServletRequest request, HttpServletResponse res) {
+
+    System.out.println(estimateSearchRequest.toString());
+    
+    Enumeration<String> parameterNames = request.getParameterNames();
+    while (parameterNames.hasMoreElements()) {
+        String paramName = parameterNames.nextElement();
+        System.out.println(paramName + ": " + request.getParameter(paramName));
+    }
       
-      String reqPage = request.getParameter("page");
-      String reqSize = request.getParameter("size");
-      
-      if(reqPage==null || reqPage=="") {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-      }
-      if(reqSize==null || reqPage=="") {
-        reqSize = "50";
-      }
-      
-      int page = Integer.parseInt(reqPage);
-      int size = Integer.parseInt(reqSize);
-      
-      List<EstimateDto> list = null;
+    HashMap<String,Object> hashMap = new HashMap<>();
       try {
-          list = estimateService.getAllEstimate(page,size);
+        hashMap = estimateService.getEstimateSearch(estimateSearchRequest);
       } catch (SQLException e) {
           e.printStackTrace();
           return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -142,33 +139,30 @@ public class EstimateController {
       ObjectMapper objectMapper = new ObjectMapper();
       objectMapper.registerModule(new JavaTimeModule());
       String jsonResponse = "";
-      try {
-          jsonResponse = objectMapper.writeValueAsString(list);
-      } catch (Exception e) {
-          e.printStackTrace();
-          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-      }
-
-      return ResponseEntity.ok().headers(headers).body("{\"list\": " + jsonResponse + "}");
+//      try {
+//          jsonResponse = objectMapper.writeValueAsString(hashMap);
+//      } catch (Exception e) {
+//          e.printStackTrace();
+//          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+//      }
+      HttpHeaders headers = new HttpHeaders();
+      headers.add("Content-Type", "application/json; charset=UTF-8");
+      
+      return ResponseEntity.ok().headers(headers).body(hashMap);
   }
       
   @GetMapping("/getCountAll")
   public ResponseEntity<?> getCountAll(HttpServletRequest req, HttpServletResponse res){
       HttpHeaders headers = new HttpHeaders();
       headers.add("Content-Type", "application/json; charset=UTF-8");
-
-      int total = 0;
+      HashMap<String, Integer> countMap = new HashMap<>();
       try {
-          total = estimateService.getCountAll();
+        countMap = estimateService.getCountAllStatus();
       } catch (SQLException e) {
           e.printStackTrace();
-          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                               .headers(headers)
-                               .body("{\"error\": \"An error occurred while fetching the count.\"}");
+          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
       }
-      return ResponseEntity.ok()
-                           .headers(headers)
-                           .body("{\"totalCount\": " + total + "}");
+      return ResponseEntity.ok().headers(headers).body(countMap);
   }
   
   @GetMapping("/getEstimateByUserSeq")

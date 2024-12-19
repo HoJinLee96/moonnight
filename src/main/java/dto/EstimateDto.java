@@ -1,6 +1,7 @@
 package dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class EstimateDto {
   private int estimateSeq;
@@ -19,9 +20,11 @@ public class EstimateDto {
   private Status status; 
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
+  private List<String> imageList;
+  
   public EstimateDto() {
   }
-  // enum 선언
+  
   public enum Status {
     RECEIVED, IN_PROGRESS, COMPLETED, DELETE
   }
@@ -39,7 +42,6 @@ public class EstimateDto {
       boolean smsAgree, boolean callAgree, String postcode, String mainAddress,
       String detailAddress, String content, String imagesPath,
       Status status, LocalDateTime createdAt, LocalDateTime updatedAt) {
-    super();
     this.estimateSeq = estimateSeq;
     this.userSeq = userSeq;
     this.name = name;
@@ -56,6 +58,7 @@ public class EstimateDto {
     this.status = status;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
+    this.imageList = imageList;
   }
 
 
@@ -159,31 +162,20 @@ public class EstimateDto {
     this.estimateSeq = estimateSeq;
   }
   
-  
   public int getUserSeq() {
     return userSeq;
   }
-  
-
 
   public void setUserSeq(int userSeq) {
     this.userSeq = userSeq;
   }
 
-
-  @Override
-  public String toString() {
-    return "EstimateDto [estimateSeq=" + estimateSeq + ", userSeq=" + userSeq + ", name=" + name
-        + ", phone=" + phone + ", email=" + email + ", emailAgree=" + emailAgree + ", smsAgree="
-        + smsAgree + ", callAgree=" + callAgree + ", postcode=" + postcode + ", mainAddress="
-        + mainAddress + ", detailAddress=" + detailAddress + ", content=" + content
-        + ", imagesPath=" + imagesPath + ", status=" + status + ", createdAt=" + createdAt
-        + ", updatedAt=" + updatedAt + "]";
+  public List<String> getImageList() {
+    return imageList;
   }
 
-
-
-  
-  
+  public void setImageList(List<String> imageList) {
+    this.imageList = imageList;
+  }
   
 }
