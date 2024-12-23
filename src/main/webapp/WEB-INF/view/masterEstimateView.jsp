@@ -134,12 +134,12 @@ table td {
 .dateButton:hover{
 	background-color: #efefef;
 }
-#monthSelect{
+#monthSelect,#yearSelect{
 	border: 1px solid #efefef;
 	border-radius: 5px; 
 	padding: 5px 10px;
 }
-#startDate, #endDate, #sizeSelect{
+#startDate, #endDate, #sizeSelect, #rangeButton{
 	outline: none;
 	border: 1px solid #efefef;
 	border-radius: 5px; 
@@ -179,8 +179,13 @@ table td {
 				<button class="dateButton" id="today">오늘</button>
 				<button class="dateButton" id="days7">지날 7일</button>
 				<button class="dateButton" id="days30">지난 30일</button>
-				<select id="monthSelect" >
-					<option value="">월별</option>
+				<div style="display:inline-block;margin: 0px 10px; color:#efefef">|</div>
+				<div style="display:inline-block;margin-right: 10px;">월별</div>
+				<select class ="monthButton" id="yearSelect" >
+				<option value="">년도</option>
+				</select>
+				<select class ="monthButton" id="monthSelect" >
+					<option value="">월</option>
 					<option value="1">1월</option>
 					<option value="2">2월</option>
 					<option value="3">3월</option>
@@ -195,10 +200,11 @@ table td {
 					<option value="12">12월</option>
 				</select>
 				<div style="display:inline-block;margin: 0px 10px; color:#efefef">|</div>
-				<input id="startDate" type="date">
+				<div style="display:inline-block;margin-right: 10px;">입력 기간</div>
+				<input class="rangeInput" id="startDate" type="date">
 				<div style="display:inline-block;margin: 0px 10px;">~</div>
-				<input id="endDate"type="date">
-				<button class="dateButton" id="last30">조회</button>
+				<input class="rangeInput" id="endDate"type="date">
+				<button class="rangeButton" id="rangeButton">조회</button>
 			</div>
 		</div>
 	</div>
@@ -242,11 +248,21 @@ table td {
 
 <!--  페이지 로드 -->
 <script>
-let currentGroup = 1; // 현재 그룹
+let buttonGroupField = 1; // 현재 그룹
 const buttonsPerGroup = 10; // 한 그룹당 몇개의 버튼
-let quotesPerPage = 10; // 한 페이지당 사이즈
-let quotesStatus = "RECEIVED"; // 조회할 상태값
-let periodType = "ALL";
+let estimatesPerPageField = 10; // 한 페이지당 사이즈
+let statusField = "RECEIVED"; // 조회할 상태값
+let periodTypeField = "DAYS30";
+let yearField = "";
+let monthField = "";
+let startDateField = "";
+let endDateField = "";
+let searchTypeField = "";
+let searchWordsField ="";
+let sortTypeField = "DESC";
+
+const startYear = 2024; // 최소 연도
+const endYear = new Date().getFullYear(); // 최대 연도
 
 const statusDivs = document.querySelectorAll(".statusType"); //상태 태그들
 const allCount = document.getElementById('allCount'); // 전체
@@ -255,18 +271,21 @@ const inprogressCount = document.getElementById('inprogressCount'); // 진행중
 const completedCount = document.getElementById('completedCount'); //완료
 const sizeSelect = document.getElementById("sizeSelect"); // 사이즈
 const dateButtons = document.querySelectorAll(".dateButton"); //기간 태그들
-const selectCount = document.getElementById("selectCount"); // 선택한 조건 견적서 갯수
+const monthButtons = document.querySelectorAll(".monthButton"); //년월 태그들
+const rangeInputs = document.querySelectorAll(".rangeInput"); //입력기간 태그들
+const rangeButton = document.getElementById("rangeButton"); //입력기간 조회 태그
+const selectCount = document.getElementById("selectCount"); // 조건에 맞는 견적서 갯수 태그
+const yearSelect = document.getElementById("yearSelect"); //연도 태그
 
-
-document.addEventListener('DOMContentLoaded', async () => {
-	// API 견적서 카운트
-	const countMap = await getTotalQuotesCount();
-    
-    // 카운트 기입
-    allCount.innerText = countMap.ALL; 
-    receivedCount.innerText = countMap.RECEIVED;
-    inprogressCount.innerText = countMap.IN_PROGRESS;
-    completedCount.innerText = countMap.COMPLETED;
+document.addEventListener('DOMContentLoaded', async () => 
+{
+	// 연도 옵션 생성
+    for (let i = startYear; i <= endYear; i++) {
+        const option = document.createElement("option");
+        option.value = i;
+        option.textContent = i;
+        yearSelect.appendChild(option);
+      }
     
     // 상태 클릭시
 	statusDivs.forEach(div => {
@@ -276,17 +295,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 	dateButtons.forEach(div => {
         div.addEventListener("click", dateClick);
       });
+    // 월별 변동시
+	monthButtons.forEach(div => {
+        div.addEventListener("change", monthChange);
+      });
+    // 입력 기간 조회 클릭시
+	rangeButton.addEventListener("click", rangeClick);
     // 사이즈 변동시
 	sizeSelect.addEventListener("change", sizeChange);
     
-	
-    const totalCount = countMap.ALL;
-    const totalPages = Math.ceil(totalCount / quotesPerPage); // 총 페이지 수
+	// API 견적서 모든 상태 카운트 get
+	const countMap = await getTotalQuotesCount();
     
-    createPaginationButtons(totalPages); // 동적html 페이지 번호 생성
+    // 카운트 기입
+    innerTextTotalQuotesCount(countMap);
+   
+    const totalCount = countMap.ALL;
+    const totalPages = Math.ceil(totalCount / estimatesPerPageField); // 총 페이지 수
+    
+    //createPaginationButtons(countMap); // 동적html 페이지 번호 생성
     
     // API 견적서 리스트 
-    loadQuotesPage(1,quotesPerPage,quotesStatus); // 첫 페이지 로드
+     /* loadQuotesPage({
+    	pageNumber:1,
+    	size:estimatesPerPageField,
+    	status:statusField}); // 첫 페이지 로드 */
+	loadQuotesPage(1);
 });
 
 // 카운트 api 함수
@@ -298,47 +332,50 @@ async function getTotalQuotesCount() {
 
 
 // 버튼 생성 함수
-function createPaginationButtons(totalCount) {
+function createPaginationButtons(totalCount,page) {
+
+	selectCount.innerText = "총 " + totalCount + "건"; // 카운트 출력
 	
-	const totalPages = Math.ceil(totalCount / quotesPerPage); // 총 페이지 수
-	
-	selectCount.innerText = "총 " + totalCount + "건";
+	const totalPages = Math.ceil(totalCount / estimatesPerPageField); // 총 페이지 수
 
     const pageNumberDiv = document.getElementById('pageNumberDiv');
     pageNumberDiv.innerHTML = '';
 
     const totalGroups = Math.ceil(totalPages / buttonsPerGroup); // 총 버튼 그룹 
 
-    if (currentGroup > 1) { // 현재 버튼 그룹이 2 이상일때 "<" 버튼 생성
+    if (buttonGroupField > 1) { // 현재 버튼 그룹이 2 이상일때 "<" 버튼 생성
         const prevButton = document.createElement('button');
         prevButton.innerText = '<';
         prevButton.addEventListener('click', () => {
-            currentGroup--;
+            buttonGroupField--;
             createPaginationButtons(totalPages);
-            const startPage = (currentGroup - 1) * buttonsPerGroup + 1; // 새 그룹에 맞게 계산
-            loadQuotesPage(startPage,quotesPerPage,quotesStatus);
+            const startPage = (buttonGroupField - 1) * buttonsPerGroup + 1; // 새 그룹에 맞게 계산
+            loadQuotesPage({pageNumber:startPage,size:estimatesPerPageField,status:statusField});
         });
         pageNumberDiv.appendChild(prevButton);
     }
 
-    const startPage = (currentGroup - 1) * buttonsPerGroup + 1; // 예시: 1, 11, 21, 31 ...
-    const endPage = Math.min(currentGroup * buttonsPerGroup, totalPages); // 좌우 둘 중 작은 값 반환
+    const startPage = (buttonGroupField - 1) * buttonsPerGroup + 1; // 예시: 1, 11, 21, 31 ...
+    const endPage = Math.min(buttonGroupField * buttonsPerGroup, totalPages); // 좌우 둘 중 작은 값 반환
 
     for (let i = startPage; i <= endPage; i++) {
         const button = document.createElement('button');
         button.innerText = i;
-        button.addEventListener('click', () => loadQuotesPage(i,quotesPerPage,quotesStatus));
+        button.addEventListener('click', () => loadQuotesPage({pageNumber:i,size:estimatesPerPageField,status:statusField}));
+        if(i==page){
+        	button.style.color = "#bebebe";
+        }
         pageNumberDiv.appendChild(button);
     }
 
-    if (currentGroup < totalGroups) { // 현재 버튼 그룹 다음 버튼 그룹이 있을때
+    if (buttonGroupField < totalGroups) { // 현재 버튼 그룹 다음 버튼 그룹이 있을때
         const nextButton = document.createElement('button');
         nextButton.innerText = '>';
         nextButton.addEventListener('click', () => {
-            currentGroup++;
+            buttonGroupField++;
             createPaginationButtons(totalPages);
-            const startPage = (currentGroup - 1) * buttonsPerGroup + 1; // 새 그룹에 맞게 계산
-            loadQuotesPage(startPage,quotesPerPage,quotesStatus);
+            const startPage = (buttonGroupField - 1) * buttonsPerGroup + 1; // 새 그룹에 맞게 계산
+            loadQuotesPage({pageNumber:startPage,size:estimatesPerPageField,status:statusField});
         });
         pageNumberDiv.appendChild(nextButton);
     }
@@ -350,7 +387,7 @@ function updatePagination(totalPages) {
 
 
 
-function displayQuotes(list) {
+function displayQuotes(count, list) {
 	console.log(list);
     const quotesContainer = document.getElementById('quotes');
     const table = document.getElementById('table');
@@ -444,48 +481,52 @@ function displayQuotes(list) {
 
 <!-- 견적서 요청 API -->
 <script type="text/javascript">
-async function loadQuotesPage(pageNumber,size,status,periodType,startDate,endDate,year,month,searchType,searchWords) {
+/* function loadQuotesPage({pageNumber,size,status,periodType,startDate,endDate,year,month,searchType,searchWords}) { */
+function loadQuotesPage(pageNumber) {
     
 	console.log(pageNumber +"번 페이지 로드 시작");
  	const tbody = document.querySelector("tbody"); // <tbody> 요소 선택
- 	const pageNumberDiv = document.querySelector("#pageNumberDiv");
- 	const buttons = pageNumberDiv.querySelectorAll("button");
-	
- 	// 현제 페이지 버튼 회색으로 변경
- 	buttons.forEach(button => {
- 	    if (button.innerText == pageNumber) { 
- 	        button.style.color = "#bebebe";
- 	    }else{
- 	    	button.style.color = "black";
- 	    }
- 	});
- 	
 	tbody.replaceChildren();
 	
-	const estimateSearchRequest = {
+/* 	const estimateSearchRequest = {
 		    status: status,               // enum 값
 		    page: pageNumber,                     // 페이지 번호 (양수)
 		    size: size,                    // 페이지 크기 (양수)
 		    sortType: "DESC",            // enum 값
-		    periodType: periodType || "ALL"      // enum 값 (e.g., MONTHLY, RANGE, etc.)
-/*  		    startDate: "",             // 기간 시작일 (RANGE 타입일 경우 사용)
-		    endDate: "",               // 기간 종료일 (RANGE 타입일 경우 사용) 
-		    year: "2024",                // 기간 연도 (MONTHLY 타입일 경우 사용)
-		    month: "12",                 // 기간 월 (MONTHLY 타입일 경우 사용)
-		    searchType: "NAME",          // enum 값 (e.g., NAME, EMAIL, etc.)
-		    searchWords: "John Doe"      // 검색어 */
-		};
+		    periodType: periodType || "ALL",      // enum 값 (e.g., MONTHLY, RANGE, etc.)
+		    //스프레드 연산자 사용
+		    ...(startDate && { startDate }),   // 기간 시작일 (RANGE 타입일 경우 사용)
+		    ...(endDate && { endDate }),       // 기간 종료일 (RANGE 타입일 경우 사용)
+		    ...(year && { year }),             // 기간 연도 (MONTHLY 타입일 경우 사용)
+		    ...(month && { month }),           // 기간 월 (MONTHLY 타입일 경우 사용)
+		    ...(searchType && { searchType }), // enum 값 (e.g., NAME, EMAIL, etc.)
+		    ...(searchWords && { searchWords }) // 검색어
+		  }; */
+	const estimateSearchRequest = {
+		    status: statusField,
+		    page: pageNumber,
+		    size: estimatesPerPageField,                
+		    sortType: sortTypeField,
+		    periodType: periodTypeField,
+		    ...(periodTypeField == "RAGNE" && { startDate:startDateField }),
+		    ...(periodTypeField == "RAGNE" && { endDate:endDateField }),
+		    ...(periodTypeField == "MONTHLY" && { year:yearField }),
+		    ...(periodTypeField == "MONTHLY" && { month:monthField }),
+		    ...(searchWordsField != "" && { searchType:searchTypeField }),
+		    ...(searchWordsField != "" && { searchWords:searchWordsField })
+	  };
 	
 	try {
 	    validateEstimateSearchRequest(estimateSearchRequest);
-	    console.log("Validation successful!");
 	} catch (error) {
-	    alert("비정상 접근.");
-	    console.error("Validation error:", error.message);
+		alert(error.message);
+	    location.reload();
 	}
 	
+	getAllEstimate(estimateSearchRequest);
+}
+async function getAllEstimate(estimateSearchRequest){
     const queryString = new URLSearchParams(estimateSearchRequest).toString();
-    console.log(queryString);
 	
 	try {
 		const response = await fetch("/estimate/getAllEstimate?"+queryString, {
@@ -493,22 +534,18 @@ async function loadQuotesPage(pageNumber,size,status,periodType,startDate,endDat
 		});
         if (!response.ok) {
         	const message = await response.text(); // 서버에서 반환된 메시지 읽기
-        	console.log(message);
             throw new Error("Network response was not ok: "+message);
         }
         const data = await response.json();
         if (!data.list || !Array.isArray(data.list)) {
             throw new Error('Invalid data format');
         }
-		displayQuotes(data.list);
-		/* const totalPages = Math.ceil(data.count / quotesPerPage); // 총 페이지 수 */
-	    createPaginationButtons(data.count); // 동적html 페이지 번호 생성
-	    /* selectCount.innerText = "총 " + data.count + "건"; */
+	    createPaginationButtons(data.count,estimateSearchRequest.page); // 동적html 페이지 번호 생성
+		displayQuotes(data.count, data.list);
     } catch (error) {
     	alert("로딩 실패.");
         console.error('Fetch error:', error);
     }
-
 }
 </script>
 
@@ -517,11 +554,14 @@ async function loadQuotesPage(pageNumber,size,status,periodType,startDate,endDat
 function statusClick(event) {
   const clickedDiv = event.target;
   const id = clickedDiv.id; // 클릭한 div의 ID를 가져옴
-  quotesStatus = id.toUpperCase();
-  currentGroup = 1;
-  loadQuotesPage(1,quotesPerPage,quotesStatus,periodType);
+  statusField = id.toUpperCase();
+  buttonGroupField = 1;
+  loadQuotesPage({
+	  pageNumber:1,
+	  size:estimatesPerPageField,
+	  status:statusField,
+	  periodType:periodTypeField});
   
-  // 모든 div의 클래스 초기화
   statusDivs.forEach(div => {
     div.className = "";
     div.className = "statusType";
@@ -532,17 +572,18 @@ function statusClick(event) {
 }
 </script>
 
-<!-- 기간 클릭시 -->
+<!-- 기간(전체,오늘,7일,30일) 클릭시 -->
 <script type="text/javascript">
 function dateClick(event) {
 	  const clickedDiv = event.target;
 	  const id = clickedDiv.id; // 클릭한 div의 ID를 가져옴
-	  periodType = id.toUpperCase();
-	  console.log(periodType);
-	  currentGroup = 1;
-	  loadQuotesPage(1,quotesPerPage,quotesStatus,periodType);
-	  /* async function loadQuotesPage(pageNumber,size,status,periodType,startDate,endDate,year,month,searchType,searchWords) */
-
+	  periodTypeField = id.toUpperCase();
+	  buttonGroupField = 1;
+	  loadQuotesPage({
+		  pageNumber:1,
+		  size:estimatesPerPageField,
+		  status:statusField,
+		  periodType:periodTypeField});
 	  
 	  // 모든 div의 클래스 초기화
 	  dateButtons.forEach(div => {
@@ -552,14 +593,75 @@ function dateClick(event) {
 	  // 클릭된 div만 클래스 설정
 	  clickedDiv.className = "";
 	  clickedDiv.className = "dateButton selectType";
+	  monthButtons.forEach(div => {
+	    div.value = "";
+	  });
 	}
 </script>
+<!-- 기간(월별) 클릭시 -->
+<script type="text/javascript">
+function monthChange(event) {
+	  
+	  const yearSelect = document.getElementById("yearSelect");
+	  yearField = yearSelect.value;
+	  
+	  const monthSelect = document.getElementById("monthSelect");
+	  monthField = monthSelect.value;
+	  
+	  if(year==="" || month===""){
+		  return;
+	  }
+	  
+	  periodTypeField = "MONTHLY";
+	  buttonGroupField = 1;
+	  loadQuotesPage({
+		  pageNumber:1,
+		  size:estimatesPerPageField,
+		  status:statusField,
+		  periodType:periodTypeField,
+		  year:yearField,
+		  month:monthField});
+	  
+	  // 모든 div의 클래스 초기화
+	  dateButtons.forEach(div => {
+	    div.className = "";
+	    div.className = "dateButton";
+	  });
+	}
+</script>
+<!-- 기간(범위) 클릭시 -->
+<script type="text/javascript">
+function rangeClick(event) {
+	periodTypeField = "RANGE";
+	  buttonGroupField = 1;
+	  const startDate = document.getElementById("startDate").value;
+	  const endDate = document.getElementById("endDate").value;
+	  loadQuotesPage({
+		  pageNumber:1,
+		  size:estimatesPerPageField,
+		  status:statusField,
+		  periodType:periodTypeField,
+		  startDate:startDate,
+		  endDate:endDate});
+	  
+	  // 모든 div의 클래스 초기화
+	  dateButtons.forEach(div => {
+	    div.className = "";
+	    div.className = "dateButton";
+	  });
+	}
+</script>
+
 <!-- 사이즈 변동시 -->
 <script type="text/javascript">
 function sizeChange(event) {
-	quotesPerPage = event.target.value;
-	currentGroup = 1;
-	loadQuotesPage(1,quotesPerPage,quotesStatus,periodType); 
+	estimatesPerPageField = event.target.value;
+	buttonGroupField = 1;
+	loadQuotesPage({
+		pageNumber:1,
+		size:estimatesPerPageField,
+		status:statusField,
+		periodType:periodTypeField});
 	}
 </script>
 
@@ -606,9 +708,10 @@ function validateEstimateSearchRequest(request) {
             throw new Error("월은 1부터 12 사이여야 합니다.");
         }
 
-        const yearMonth = new Date(year, month, 0); // Last day of the given month
+        const yearMonth = new Date(year, month-1, 1); // 해당 년도, 해당 월, 1일
+        console.log(yearMonth + " / " + today);
         if (yearMonth > today) {
-            throw new Error("연도와 월은 현재 날짜 이전이어야 합니다.");
+            throw new Error("연도와 월이 현재보다 이후 일 수 없습니다.");
         }
     }
 
@@ -644,6 +747,15 @@ function validateEstimateSearchRequest(request) {
     }
 
     return true; // If all validations pass
+}
+</script>
+<!-- 현재 모든 상태 카운트 기입 함수 -->
+<script type="text/javascript">
+function innerTextTotalQuotesCount(countMap) {
+    allCount.innerText = countMap.ALL; 
+    receivedCount.innerText = countMap.RECEIVED;
+    inprogressCount.innerText = countMap.IN_PROGRESS;
+    completedCount.innerText = countMap.COMPLETED;
 }
 </script>
 </html>

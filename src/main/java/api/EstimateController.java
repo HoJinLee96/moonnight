@@ -136,15 +136,6 @@ public class EstimateController {
           return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
       }
 
-      ObjectMapper objectMapper = new ObjectMapper();
-      objectMapper.registerModule(new JavaTimeModule());
-      String jsonResponse = "";
-//      try {
-//          jsonResponse = objectMapper.writeValueAsString(hashMap);
-//      } catch (Exception e) {
-//          e.printStackTrace();
-//          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-//      }
       HttpHeaders headers = new HttpHeaders();
       headers.add("Content-Type", "application/json; charset=UTF-8");
       
