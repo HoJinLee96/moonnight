@@ -295,8 +295,9 @@ public class EstimateDao {
                 break;
             case MONTHLY:
                 if (request.getYear() != null && request.getMonth() != null) {
-                    sql.append(" AND DATE_FORMAT(created_at, '%Y-%m') = '")
-                       .append(request.getYear()).append("-").append(request.getMonth()).append("'");
+                  String formattedMonth = String.format("%02d", Integer.parseInt(request.getMonth())); // 앞에 0을 붙여 두 자리로 변환
+                  sql.append(" AND DATE_FORMAT(created_at, '%Y-%m') = '")
+                     .append(request.getYear()).append("-").append(formattedMonth).append("'");
                 }
                 break;
             case RANGE:

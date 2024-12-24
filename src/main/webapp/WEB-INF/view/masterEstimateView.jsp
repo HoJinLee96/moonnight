@@ -13,7 +13,7 @@ background-color: #1f1f1f !important;
 color: white !important;
 } */
 #main{
-    max-width: 1900px;
+    max-width: 1800px;
     min-width: 980px;
     width: 99vw;
     padding: 0px 50px;
@@ -35,7 +35,7 @@ table{
     width: 93vw;
     text-align: center;
     border-spacing: 0px 0px;
-    margin-top: 10px;
+    margin-top: 15px;
     padding-top: 30px;
 }
 table th{
@@ -117,7 +117,7 @@ table td {
     border-radius: 5px !important;
     background-color: #f1f6ff !important;
 }
-#sort{
+#conditionsSelects, #searchSelects{
 	margin-top: 15px;
 }
 #dateSelects{
@@ -139,7 +139,7 @@ table td {
 	border-radius: 5px; 
 	padding: 5px 10px;
 }
-#startDate, #endDate, #sizeSelect, #rangeButton{
+#startDate, #endDate, #sizeSelect, #rangeButton, #searchTypeSelect, #searchWordsInput, #searchButton{
 	outline: none;
 	border: 1px solid #efefef;
 	border-radius: 5px; 
@@ -159,6 +159,9 @@ table td {
     position: absolute;
     right: 0px;
 }
+#searchItem{
+	display: inline-block;
+}
 </style>
 </head>
 <body>
@@ -172,13 +175,13 @@ table td {
 			<div class ="statusType" id="in_progress"><div>처리중</div><div id="inprogressCount">0</div></div>
 			<div class ="statusType" id="completed"><div>완료</div><div id="completedCount">0</div></div>
 		</div>
-		<div id="sort">
+		<div id="conditionsSelects">
 			<div id="dateSelects">
 				<div style="display:inline-block;margin-right: 10px;">기간</div>
-				<button class="dateButton selectType" id="all">전체</button>
+				<button class="dateButton" id="all">전체</button>
 				<button class="dateButton" id="today">오늘</button>
 				<button class="dateButton" id="days7">지날 7일</button>
-				<button class="dateButton" id="days30">지난 30일</button>
+				<button class="dateButton selectType" id="days30">지난 30일</button>
 				<div style="display:inline-block;margin: 0px 10px; color:#efefef">|</div>
 				<div style="display:inline-block;margin-right: 10px;">월별</div>
 				<select class ="monthButton" id="yearSelect" >
@@ -205,6 +208,19 @@ table td {
 				<div style="display:inline-block;margin: 0px 10px;">~</div>
 				<input class="rangeInput" id="endDate"type="date">
 				<button class="rangeButton" id="rangeButton">조회</button>
+			</div>
+			<div id="searchSelects">
+			<div style="display:inline-block;margin-right: 10px;">검색</div>
+				<select class="searchInput" id="searchTypeSelect" >
+					<option value="">선택</option>
+					<option value="estimate_seq">접수번호</option>
+					<option value="name">이름</option>
+					<option value="phone">연락처</option>
+					<option value="email">이메일</option>
+					<option value="address">주소</option>
+				</select>
+				<input class="searchInput" id="searchWordsInput"type="text" maxlength="30">
+				<button class="searchButton" id="searchButton">조회</button>
 			</div>
 		</div>
 	</div>
@@ -261,6 +277,15 @@ let searchTypeField = "";
 let searchWordsField ="";
 let sortTypeField = "DESC";
 
+//타입 변환 객체
+const typeMapping = {
+    ADDRESS: "주소",
+    NAME: "이름",
+    EMAIL: "이메일",
+    ESTIMATE_SEQ: "접수번호",
+    PHONE: "연락처"
+};
+
 const startYear = 2024; // 최소 연도
 const endYear = new Date().getFullYear(); // 최대 연도
 
@@ -276,6 +301,8 @@ const rangeInputs = document.querySelectorAll(".rangeInput"); //입력기간 태
 const rangeButton = document.getElementById("rangeButton"); //입력기간 조회 태그
 const selectCount = document.getElementById("selectCount"); // 조건에 맞는 견적서 갯수 태그
 const yearSelect = document.getElementById("yearSelect"); //연도 태그
+const searchInputs = document.querySelectorAll(".searchInput"); //년월 태그들
+const searchButton = document.getElementById("searchButton"); //입력기간 조회 태그
 
 document.addEventListener('DOMContentLoaded', async () => 
 {
@@ -301,8 +328,12 @@ document.addEventListener('DOMContentLoaded', async () =>
       });
     // 입력 기간 조회 클릭시
 	rangeButton.addEventListener("click", rangeClick);
+    
     // 사이즈 변동시
 	sizeSelect.addEventListener("change", sizeChange);
+    
+	// 검색어 조회시
+	searchButton.addEventListener("click", searchClick);
     
 	// API 견적서 모든 상태 카운트 get
 	const countMap = await getTotalQuotesCount();
@@ -313,13 +344,6 @@ document.addEventListener('DOMContentLoaded', async () =>
     const totalCount = countMap.ALL;
     const totalPages = Math.ceil(totalCount / estimatesPerPageField); // 총 페이지 수
     
-    //createPaginationButtons(countMap); // 동적html 페이지 번호 생성
-    
-    // API 견적서 리스트 
-     /* loadQuotesPage({
-    	pageNumber:1,
-    	size:estimatesPerPageField,
-    	status:statusField}); // 첫 페이지 로드 */
 	loadQuotesPage(1);
 });
 
@@ -348,9 +372,10 @@ function createPaginationButtons(totalCount,page) {
         prevButton.innerText = '<';
         prevButton.addEventListener('click', () => {
             buttonGroupField--;
-            createPaginationButtons(totalPages);
+            //createPaginationButtons(totalPages);
             const startPage = (buttonGroupField - 1) * buttonsPerGroup + 1; // 새 그룹에 맞게 계산
-            loadQuotesPage({pageNumber:startPage,size:estimatesPerPageField,status:statusField});
+            //loadQuotesPage({pageNumber:startPage,size:estimatesPerPageField,status:statusField});
+            loadQuotesPage(startPage);
         });
         pageNumberDiv.appendChild(prevButton);
     }
@@ -361,7 +386,7 @@ function createPaginationButtons(totalCount,page) {
     for (let i = startPage; i <= endPage; i++) {
         const button = document.createElement('button');
         button.innerText = i;
-        button.addEventListener('click', () => loadQuotesPage({pageNumber:i,size:estimatesPerPageField,status:statusField}));
+        button.addEventListener('click', () => loadQuotesPage(i));
         if(i==page){
         	button.style.color = "#bebebe";
         }
@@ -373,9 +398,10 @@ function createPaginationButtons(totalCount,page) {
         nextButton.innerText = '>';
         nextButton.addEventListener('click', () => {
             buttonGroupField++;
-            createPaginationButtons(totalPages);
+            //createPaginationButtons(totalPages);
             const startPage = (buttonGroupField - 1) * buttonsPerGroup + 1; // 새 그룹에 맞게 계산
-            loadQuotesPage({pageNumber:startPage,size:estimatesPerPageField,status:statusField});
+            //loadQuotesPage({pageNumber:startPage,size:estimatesPerPageField,status:statusField});
+            loadQuotesPage(startPage);
         });
         pageNumberDiv.appendChild(nextButton);
     }
@@ -484,32 +510,29 @@ function displayQuotes(count, list) {
 /* function loadQuotesPage({pageNumber,size,status,periodType,startDate,endDate,year,month,searchType,searchWords}) { */
 function loadQuotesPage(pageNumber) {
     
-	console.log(pageNumber +"번 페이지 로드 시작");
+	console.log("statusField : "+statusField+", \n"+
+			"pageNumber : "+pageNumber+", \n"+
+			"estimatesPerPageField : "+estimatesPerPageField+", \n"+
+			"sortTypeField : "+sortTypeField+", \n"+
+			"periodTypeField : "+periodTypeField+", \n"+
+			"startDateField : "+startDateField+", \n"+
+			"endDateField : "+endDateField+", \n"+
+			"yearField : "+yearField+", \n"+
+			"monthField : "+monthField+", \n"+
+			"searchTypeField : "+searchTypeField+", \n"+
+			"searchWordsField : "+searchWordsField
+	);
  	const tbody = document.querySelector("tbody"); // <tbody> 요소 선택
 	tbody.replaceChildren();
 	
-/* 	const estimateSearchRequest = {
-		    status: status,               // enum 값
-		    page: pageNumber,                     // 페이지 번호 (양수)
-		    size: size,                    // 페이지 크기 (양수)
-		    sortType: "DESC",            // enum 값
-		    periodType: periodType || "ALL",      // enum 값 (e.g., MONTHLY, RANGE, etc.)
-		    //스프레드 연산자 사용
-		    ...(startDate && { startDate }),   // 기간 시작일 (RANGE 타입일 경우 사용)
-		    ...(endDate && { endDate }),       // 기간 종료일 (RANGE 타입일 경우 사용)
-		    ...(year && { year }),             // 기간 연도 (MONTHLY 타입일 경우 사용)
-		    ...(month && { month }),           // 기간 월 (MONTHLY 타입일 경우 사용)
-		    ...(searchType && { searchType }), // enum 값 (e.g., NAME, EMAIL, etc.)
-		    ...(searchWords && { searchWords }) // 검색어
-		  }; */
 	const estimateSearchRequest = {
 		    status: statusField,
 		    page: pageNumber,
 		    size: estimatesPerPageField,                
 		    sortType: sortTypeField,
 		    periodType: periodTypeField,
-		    ...(periodTypeField == "RAGNE" && { startDate:startDateField }),
-		    ...(periodTypeField == "RAGNE" && { endDate:endDateField }),
+		    ...(periodTypeField == "RANGE" && { startDate:startDateField }),
+		    ...(periodTypeField == "RANGE" && { endDate:endDateField }),
 		    ...(periodTypeField == "MONTHLY" && { year:yearField }),
 		    ...(periodTypeField == "MONTHLY" && { month:monthField }),
 		    ...(searchWordsField != "" && { searchType:searchTypeField }),
@@ -556,11 +579,7 @@ function statusClick(event) {
   const id = clickedDiv.id; // 클릭한 div의 ID를 가져옴
   statusField = id.toUpperCase();
   buttonGroupField = 1;
-  loadQuotesPage({
-	  pageNumber:1,
-	  size:estimatesPerPageField,
-	  status:statusField,
-	  periodType:periodTypeField});
+  loadQuotesPage(1);
   
   statusDivs.forEach(div => {
     div.className = "";
@@ -579,77 +598,155 @@ function dateClick(event) {
 	  const id = clickedDiv.id; // 클릭한 div의 ID를 가져옴
 	  periodTypeField = id.toUpperCase();
 	  buttonGroupField = 1;
-	  loadQuotesPage({
-		  pageNumber:1,
-		  size:estimatesPerPageField,
-		  status:statusField,
-		  periodType:periodTypeField});
+	  loadQuotesPage(1);
 	  
-	  // 모든 div의 클래스 초기화
+	  // 기간 div의 클래스 초기화
 	  dateButtons.forEach(div => {
-	    div.className = "";
-	    div.className = "dateButton";
+	  	div.classList.remove("selectType");
 	  });
-	  // 클릭된 div만 클래스 설정
-	  clickedDiv.className = "";
-	  clickedDiv.className = "dateButton selectType";
+	  
+	  //월별 조회 div 클래스 초기화
 	  monthButtons.forEach(div => {
-	    div.value = "";
+	    div.classList.remove("selectType");
+	    div.value="";
 	  });
-	}
+	  
+	  //직접 입력 기간 조회 div 클래스 초기화
+	  rangeInputs.forEach(div => {
+	    div.classList.remove("selectType");
+	    div.value="";
+	  });
+	  
+	  // 클릭된 div만 클래스 설정
+	  event.target.classList.add("selectType");
+}
 </script>
 <!-- 기간(월별) 클릭시 -->
 <script type="text/javascript">
 function monthChange(event) {
 	  
-	  const yearSelect = document.getElementById("yearSelect");
-	  yearField = yearSelect.value;
+	  yearField = document.getElementById("yearSelect").value;
+	  monthField = document.getElementById("monthSelect").value;
 	  
-	  const monthSelect = document.getElementById("monthSelect");
-	  monthField = monthSelect.value;
-	  
-	  if(year==="" || month===""){
+	  if(!yearField || !monthField || isNaN(yearField) || isNaN(monthField)){
+		  yearField="";
+		  monthField="";
 		  return;
 	  }
 	  
 	  periodTypeField = "MONTHLY";
 	  buttonGroupField = 1;
-	  loadQuotesPage({
-		  pageNumber:1,
-		  size:estimatesPerPageField,
-		  status:statusField,
-		  periodType:periodTypeField,
-		  year:yearField,
-		  month:monthField});
-	  
-	  // 모든 div의 클래스 초기화
+	  loadQuotesPage(1);
+
+	  // 기간 div의 클래스 초기화
 	  dateButtons.forEach(div => {
-	    div.className = "";
-	    div.className = "dateButton";
+	  	div.classList.remove("selectType");
 	  });
+	  
+	  //직접 입력 기간 조회 div 클래스 초기화
+	  rangeInputs.forEach(div => {
+	    div.classList.remove("selectType");
+	    div.value="";
+	  });
+	  
+	  // 클릭된 div만 클래스 설정
+	  monthButtons.forEach(div => {
+		  div.classList.add("selectType");
+	  });
+	  
 	}
 </script>
 <!-- 기간(범위) 클릭시 -->
 <script type="text/javascript">
 function rangeClick(event) {
+	startDateField = document.getElementById("startDate").value;
+	endDateField = document.getElementById("endDate").value;
+	
+	 if(!startDateField || !endDateField || isNaN(new Date(startDateField).getTime()) || isNaN(new Date(endDateField).getTime())){
+		 startDateField = "";
+		 endDateField = "";
+		 alert("정확한 기간을 입력해 주세요.");
+	  return;
+	 }
+	 
 	periodTypeField = "RANGE";
-	  buttonGroupField = 1;
-	  const startDate = document.getElementById("startDate").value;
-	  const endDate = document.getElementById("endDate").value;
-	  loadQuotesPage({
-		  pageNumber:1,
-		  size:estimatesPerPageField,
-		  status:statusField,
-		  periodType:periodTypeField,
-		  startDate:startDate,
-		  endDate:endDate});
+	buttonGroupField = 1;
+	loadQuotesPage(1);
+
+	// 기간 div의 클래스 초기화
+	dateButtons.forEach(div => {
+		div.classList.remove("selectType");
+	});
+	
+	//직접 입력 기간 조회 div 클래스 초기화
+	monthButtons.forEach(div => {
+	  div.classList.remove("selectType");
+	  div.value="";
+	});
+	
+	// 클릭된 div만 클래스 설정
+	rangeInputs.forEach(div => {
+	  div.classList.add("selectType");
+	});
 	  
-	  // 모든 div의 클래스 초기화
-	  dateButtons.forEach(div => {
-	    div.className = "";
-	    div.className = "dateButton";
-	  });
+}
+</script>
+<!-- 검색 클릭시 -->
+<script type="text/javascript">
+function searchClick(event) {
+	searchTypeField = document.getElementById("searchTypeSelect").value.toUpperCase();;
+	searchWordsField = document.getElementById("searchWordsInput").value;
+	
+	if(!searchTypeField || !searchWordsField){
+	 startDateField = "";
+	 endDateField = "";
+	 alert("정확한 단어를 입력해 주세요.");
+	 return;
 	}
+	
+	buttonGroupField = 1;
+	loadQuotesPage(1);
+	createSearchItemDiv();
+}
+
+function createSearchItemDiv() {
+    // 검색 필드 값으로 div 생성
+    const searchSelects = document.getElementById("searchSelects"); // div 컨테이너
+    const newDiv = document.createElement("div"); // 새로운 div 생성
+    newDiv.classList.add("searchItem"); // 클래스 추가 (선택적)
+    
+    const displayType = typeMapping[searchTypeField] || searchTypeField; // 변환 실패 시 원래 값을 사용
+
+    // 텍스트 노드 추가
+    const textNode = document.createTextNode(displayType + " : " + searchWordsField);
+    newDiv.appendChild(textNode);
+
+    // x 버튼 생성
+    const closeButton = document.createElement("button");
+    closeButton.className = "closeButton";
+    closeButton.style.marginLeft = "10px";
+    closeButton.textContent = "x";
+
+    // x 버튼 클릭 이벤트 추가
+    closeButton.addEventListener("click", function () {
+    	deleteSearchItemDiv(newDiv); // B 함수 호출 (div를 삭제)
+    });
+
+    // x 버튼을 div에 추가
+    newDiv.appendChild(closeButton);
+
+    // 생성된 div를 컨테이너에 추가
+    searchSelects.appendChild(newDiv);
+}
+function deleteSearchItemDiv(targetDiv) {
+    // div 삭제
+    targetDiv.remove();
+
+    // 필드 변수 초기화
+    searchTypeField = "";
+    searchWordsField = "";
+    loadQuotesPage(1);
+}
 </script>
 
 <!-- 사이즈 변동시 -->
@@ -657,17 +754,15 @@ function rangeClick(event) {
 function sizeChange(event) {
 	estimatesPerPageField = event.target.value;
 	buttonGroupField = 1;
-	loadQuotesPage({
-		pageNumber:1,
-		size:estimatesPerPageField,
-		status:statusField,
-		periodType:periodTypeField});
-	}
+	loadQuotesPage(1);
+}
 </script>
 
 <!-- validateEstimateSearchRequest 검증 함수 -->
 <script type="text/javascript">
 function validateEstimateSearchRequest(request) {
+	console.log(request);
+	
     // Pagination validation
     if (request.page < 1 || request.size < 10) {
         throw new Error("페이지는 1 이상, 사이즈는 10 이상 값이어야 합니다.");
