@@ -29,9 +29,9 @@ margin-top: 50px;
 </style>
 </head>
 <body>
-<%@ include file = "main_header.jsp" %>
+<%@ include file = "/WEB-INF/view/main/main_header.jsp" %>
 <div class="container">
-	<%@ include file="mypageSidebar.jsp"%>
+	<%@ include file="/WEB-INF/view/my/mypageSidebar.jsp"%>
 	<div class="content">
 		<p class="headerFont contentTitle">회원 탈퇴</p>
 		<p class="contentTitle">회원탈퇴에 앞서 아래 내용을 반드시 확인해 주세요.</p>
@@ -64,7 +64,7 @@ margin-top: 50px;
 	</div>
 </div>
 
-<%@ include file = "main_footer.jsp" %>
+<%@ include file = "/WEB-INF/view/main/main_footer.jsp" %>
 </body>
 
 <script type="text/javascript">

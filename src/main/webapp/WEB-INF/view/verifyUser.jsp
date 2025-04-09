@@ -29,7 +29,7 @@ border: 1px solid white;
 </style>
 </head>
 <body>
-	<%@ include file="main_header.jsp"%>
+	<%@ include file="/WEB-INF/view/main/main_header.jsp"%>
 	<div class="container">
 		<div>
 		<h3>계정 복구</h3>
@@ -39,7 +39,7 @@ border: 1px solid white;
 		</div>
 	
 	</div>
-	<%@ include file="main_footer.jsp"%>
+	<%@ include file="/WEB-INF/view/main/main_footer.jsp"%>
 </body>
 <script type="text/javascript">
 function openFindWindow(url) {

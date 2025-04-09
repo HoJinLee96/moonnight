@@ -1,22 +1,18 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<%@ page import="dto.EstimateSearchRequest" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%-- <%@ page import="dto.request.EstimateSearchRequest" %> --%>
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <title>견적서 목록</title>
 <style type="text/css">
-/* body{
-background-color: #1f1f1f !important;
-color: white !important;
-} */
 #main{
     max-width: 1800px;
     min-width: 980px;
-    width: 99vw;
-    padding: 0px 50px;
+    width: 94vw;
+    padding: 0px 40px;
 }
 #headerContainer, .top_inner, .top_main {
 	min-width: 1600px !important;
@@ -24,35 +20,56 @@ color: white !important;
 #quotes{
     max-width: 1800px;
     min-width: 980px;
-    width: 93vw;
+    width: 94vw;
     position: relative;
 }
-table{
+#mainTable{
 	border-radius: 10px;
     border-collapse: separate;
-	max-width: 1800px;
+    max-width: 1800px;
     min-width: 1600px;
-    width: 93vw;
+    width: 94vw;
     text-align: center;
     border-spacing: 0px 0px;
     margin-top: 15px;
-    padding-top: 30px;
+    padding-top: 45px;
+    table-layout: fixed;
 }
-table th{
+#mainTable th{
     font-size: 14px;
 	font-weight: bold;
 	border-bottom: 2px solid black; /* 아래 밑줄 추가 */
 	padding-bottom: 10px;
 }
-table tr{
-}
-table td {
+#mainTable td {
 	padding: 5px;
    	border-bottom: 1px solid #efefef; 
     white-space: nowrap;        /* 한 줄로 표시 */
     overflow: hidden;           /* 넘치는 내용 숨김 */
     text-overflow: ellipsis;    /* 생략(...) 처리 */
 }
+.checkTd{
+	width: 2.5%;
+}
+.seemoreTd{
+	width: 2.5%;
+	cursor: pointer;
+}
+.estimateSeqTd, .statusTd, .nameTd, .smsReceivedTd, .callReceivedTd{
+    width: 5%;
+}
+.emailReceivedTd{
+    width: 6%;
+}
+.phoneTd, .created_atTd{
+	width: 10%;
+}
+.emailTd{
+	width: 20%;
+}
+.addressTd{
+	width: 25%;
+} 
 .seeMore {
     cursor: pointer;
     background: none;
@@ -61,7 +78,10 @@ table td {
 }
 #pagination{
     text-align: center;
-	margin-top: 30px;
+    padding: 30px 0px;
+	width: 94vw;
+	max-width: 1800px;
+	min-width: 1600px; 
 }
 #pagination a{
 	text-decoration: none;
@@ -78,24 +98,6 @@ table td {
  	margin : 0px auto;
 	display : inline-block
 }
-.name {
-    max-width: 100px;
-    min-width: 100px;
-}
-.email{
-    max-width: 200px;           
-    min-width: 200px;           
-}
-.mainAddress {
-    max-width: 400px;
-    min-width: 400px;
-}
-.phone{
-    max-width: 150px;
-    min-width: 150px;
-}
-#filter{
-}
 #statusTypes{
 	display: flex;
 	margin-top: 10px;
@@ -111,8 +113,6 @@ table td {
 	background-color: #efefef;
 }
 .selectType{
-	/* margin-right: 5px;
-	padding: 10px 20px; */
     border: 1px solid #346aff !important;
     border-radius: 5px !important;
     background-color: #f1f6ff !important;
@@ -146,6 +146,9 @@ table td {
 	padding: 5px 10px;
 	cursor: pointer;
 }
+#searchWordsInput{
+	cursor: text !important;
+}
 .statusType > * {
   pointer-events: none; /* 자식 요소는 클릭 불가 */
 }
@@ -159,15 +162,125 @@ table td {
     position: absolute;
     right: 0px;
 }
-#searchItem{
+.searchItem{
 	display: inline-block;
+    padding: 5px 0px 5px 10px;
+    font-size: 15px;
 }
+#emptyDiv{
+	text-align: center;
+    padding-top: 50px;
+}
+.searchItemCloseButton{
+    margin-left: 5px;
+    border: none;
+    background-color: unset;
+    cursor: pointer;
+    position: relative;
+    top: -5px;
+}
+.details-row {
+    display: table-row;
+}
+
+.details-row.hidden, .loadingDiv.hidden {
+    display: none; /* 숨김 */
+}
+
+.details-table {
+    max-width: 1790px;
+	min-width: 1600px;
+    width: 93.5vw;
+    border: 1px solid black;
+    border-radius: 10px;
+    padding: 5px;
+    text-align: center;
+    table-layout: fixed;
+}
+.selectCheckbox{
+    transform: scale(1.4);
+}
+.commentInput{
+    width: 90%;
+    height: 100px;
+    vertical-align: bottom;
+}
+.commentRegiButton{
+	outline: none;
+	border: 1px solid #efefef;
+	border-radius: 5px; 
+	padding: 10px 20px;
+	cursor: pointer;
+	vertical-align: bottom;
+	margin-left: 5px;
+}
+.loading-spinner-container {
+	width: 94vw;
+	max-width: 1800px;
+	min-width: 1600px;
+    display: flex;
+    flex-direction: column; /* 수직으로 배치 */
+    align-items: center;
+    justify-content: center;
+    height: 140px; /* 원하는 높이 설정 */
+    opacity: 0; /* 초기 투명도 */
+    transform: translateY(-20px); /* 위로 약간 이동된 상태 */
+    transition: opacity 0.5s ease, transform 0.5s ease; /* 부드러운 애니메이션 */
+}
+
+.loading-spinner-container.show {
+    opacity: 1; /* 불투명 */
+    transform: translateY(0); /* 원래 위치로 이동 */
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 40px; /* 스피너 크기 */
+    height: 40px;
+    border: 4px solid rgba(0, 0, 0, 0.1); /* 회색 테두리 */
+    border-radius: 50%;
+    border-top-color: #007bff; /* 파란색 회전 테두리 */
+    animation: spin 1s linear infinite; /* 회전 애니메이션 */
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg); /* 360도 회전 */
+    }
+}
+
+.loading-spinner-container span {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #555; /* 메시지 색상 */
+}
+.estimate_img{
+	width: 140px;
+	height: 140px;
+}
+.imgListTr{
+	height: 146px;
+	line-height: 0px;
+}
+.commentValueTd, .imageValueTd, .contentValueTd, .addressValueTd, .emailValueTd{
+	text-align: left !important;
+}
+.commentValue{
+    border: 1px solid #d2d2d2;
+    border-radius: 5px;
+    padding: 20px;
+    margin-bottom: 5px;
+    overflow-wrap: break-word;
+    white-space: normal;
+}
+
 </style>
 </head>
 <body>
 <%@include file="master_header.jsp" %>
 
 <div id="main">
+<!-- <div id="loadingSpinner"></div> -->
 	<div id="filter">
 		<div id="statusTypes">
 			<div class ="statusType" id="all"><div>전체</div><div id="allCount">0</div></div>
@@ -213,7 +326,7 @@ table td {
 			<div style="display:inline-block;margin-right: 10px;">검색</div>
 				<select class="searchInput" id="searchTypeSelect" >
 					<option value="">선택</option>
-					<option value="estimate_seq">접수번호</option>
+					<option value="estimate_Seq">접수번호</option>
 					<option value="name">이름</option>
 					<option value="phone">연락처</option>
 					<option value="email">이메일</option>
@@ -233,20 +346,21 @@ table td {
 			<option value="40">40개씩 보기</option>
 			<option value="50">50개씩 보기</option>
 		</select>
-    	<table id="table">
+    	<table id="mainTable">
     		<thead id="thead">
     			<tr>
-	   			<th>접수번호</th>
-	   			<th>상태</th>
-	   			<th>이름</th>
-	   			<th>연락처</th>
-	   			<th>이메일</th>
-	   			<th>이메일 동의</th>
-	   			<th>SMS 동의</th>
-	   			<th>전화 동의</th>
-	   			<th>주소</th>
-	   			<th>생성일시</th>
-	   			<th></th>
+	   			<th class="checkTd"><input type="checkbox" class="selectCheckbox" id ="allCheck"></th>
+	   			<th class="estimateSeqTd">접수번호</th>
+	   			<th class="statusTd">상태</th>
+	   			<th class="nameTd">이름</th>
+	   			<th class="phoneTd">연락처</th>
+	   			<th class="emailTd">이메일</th>
+	   			<th class="emailReceivedTd">이메일 동의</th>
+	   			<th class="smsReceivedTd">SMS 동의</th>
+	   			<th class="callReceivedTd">전화 동의</th>
+	   			<th class="addressTd">주소</th>
+	   			<th class="created_atTd">생성일시</th>
+	   			<th class="seemoreTd" id="allClose">접기</th>
     			</tr>
     		</thead>
     		<tbody id="tbody">
@@ -263,7 +377,7 @@ table td {
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <!--  페이지 로드 -->
-<script>
+<script type="text/javascript">
 let buttonGroupField = 1; // 현재 그룹
 const buttonsPerGroup = 10; // 한 그룹당 몇개의 버튼
 let estimatesPerPageField = 10; // 한 페이지당 사이즈
@@ -285,12 +399,19 @@ const typeMapping = {
     ESTIMATE_SEQ: "접수번호",
     PHONE: "연락처"
 };
+const statusMapping = {
+	    RECEIVED: "신청",
+	    IN_PROGRESS: "처리중",
+	    COMPLETED: "완료",
+	    DELETE: "삭제"
+	};
 
 const startYear = 2024; // 최소 연도
 const endYear = new Date().getFullYear(); // 최대 연도
 
+const allCheck = document.getElementById("allCheck"); //전체 선택 태그
 const statusDivs = document.querySelectorAll(".statusType"); //상태 태그들
-const allCount = document.getElementById('allCount'); // 전체
+const allCount = document.getElementById('allCount'); // 전체 카운트 태그
 const receivedCount = document.getElementById('receivedCount'); // 신청
 const inprogressCount = document.getElementById('inprogressCount'); // 진행중
 const completedCount = document.getElementById('completedCount'); //완료
@@ -301,8 +422,11 @@ const rangeInputs = document.querySelectorAll(".rangeInput"); //입력기간 태
 const rangeButton = document.getElementById("rangeButton"); //입력기간 조회 태그
 const selectCount = document.getElementById("selectCount"); // 조건에 맞는 견적서 갯수 태그
 const yearSelect = document.getElementById("yearSelect"); //연도 태그
-const searchInputs = document.querySelectorAll(".searchInput"); //년월 태그들
-const searchButton = document.getElementById("searchButton"); //입력기간 조회 태그
+const searchWordsInput = document.getElementById("searchWordsInput"); //검색 input 태그
+const searchButton = document.getElementById("searchButton"); //검색 태그
+const allClose = document.getElementById("allClose"); //전부 닫기 태그
+const tbody = document.getElementById("tbody");
+
 
 document.addEventListener('DOMContentLoaded', async () => 
 {
@@ -314,142 +438,46 @@ document.addEventListener('DOMContentLoaded', async () =>
         yearSelect.appendChild(option);
       }
     
-    // 상태 클릭시
-	statusDivs.forEach(div => {
-        div.addEventListener("click", statusClick);
-      });
-    // 기간 클릭시
-	dateButtons.forEach(div => {
-        div.addEventListener("click", dateClick);
-      });
-    // 월별 변동시
-	monthButtons.forEach(div => {
-        div.addEventListener("change", monthChange);
-      });
-    // 입력 기간 조회 클릭시
-	rangeButton.addEventListener("click", rangeClick);
-    
-    // 사이즈 변동시
-	sizeSelect.addEventListener("change", sizeChange);
-    
-	// 검색어 조회시
-	searchButton.addEventListener("click", searchClick);
-    
-	// API 견적서 모든 상태 카운트 get
+    allCheck.addEventListener("click", rowCheckToggle); // 전체 선택 클릭시
+    addEventListeners(statusDivs, "click", statusClick); // 상태 클릭시
+    addEventListeners(dateButtons, "click", dateClick); // 기간 클릭시
+    addEventListeners(monthButtons, "change", monthChange); // 월별 변동시
+	rangeButton.addEventListener("click", rangeClick); // 입력 기간 조회 클릭시
+	sizeSelect.addEventListener("change", sizeChange); // 사이즈 변동시
+	searchButton.addEventListener("click", searchClick); // 검색 클릭시
+	allClose.addEventListener("click", allSeemoreCloseClick); // 검색어 조회시
+	searchWordsInput.addEventListener("keydown", (event) => {
+	    if (event.key === "Enter") { // Enter 키 감지
+	        event.preventDefault(); // 기본 동작 방지
+	        searchClick(); // 검색 함수 호출
+	    }
+	});
+	
 	const countMap = await getTotalQuotesCount();
-    
-    // 카운트 기입
     innerTextTotalQuotesCount(countMap);
    
-    const totalCount = countMap.ALL;
-    const totalPages = Math.ceil(totalCount / estimatesPerPageField); // 총 페이지 수
+    //const totalCount = countMap.ALL;
+    //const totalPages = Math.ceil(totalCount / estimatesPerPageField); // 총 페이지 수
     
-	loadQuotesPage(1);
+	try{
+		await estimatePageController(1);
+	}catch(error){
+		alert(error.message);
+		return;
+	}
 });
 
-// 카운트 api 함수
-async function getTotalQuotesCount() {
-    const response = await fetch('/estimate/getCountAll');
-    const countMap = await response.json();
-    return countMap;
-}
-
-
-// 버튼 생성 함수
-function createPaginationButtons(totalCount,page) {
-
-	selectCount.innerText = "총 " + totalCount + "건"; // 카운트 출력
-	
-	const totalPages = Math.ceil(totalCount / estimatesPerPageField); // 총 페이지 수
-
-    const pageNumberDiv = document.getElementById('pageNumberDiv');
-    pageNumberDiv.innerHTML = '';
-
-    const totalGroups = Math.ceil(totalPages / buttonsPerGroup); // 총 버튼 그룹 
-
-    if (buttonGroupField > 1) { // 현재 버튼 그룹이 2 이상일때 "<" 버튼 생성
-        const prevButton = document.createElement('button');
-        prevButton.innerText = '<';
-        prevButton.addEventListener('click', () => {
-            buttonGroupField--;
-            //createPaginationButtons(totalPages);
-            const startPage = (buttonGroupField - 1) * buttonsPerGroup + 1; // 새 그룹에 맞게 계산
-            //loadQuotesPage({pageNumber:startPage,size:estimatesPerPageField,status:statusField});
-            loadQuotesPage(startPage);
-        });
-        pageNumberDiv.appendChild(prevButton);
-    }
-
-    const startPage = (buttonGroupField - 1) * buttonsPerGroup + 1; // 예시: 1, 11, 21, 31 ...
-    const endPage = Math.min(buttonGroupField * buttonsPerGroup, totalPages); // 좌우 둘 중 작은 값 반환
-
-    for (let i = startPage; i <= endPage; i++) {
-        const button = document.createElement('button');
-        button.innerText = i;
-        button.addEventListener('click', () => loadQuotesPage(i));
-        if(i==page){
-        	button.style.color = "#bebebe";
-        }
-        pageNumberDiv.appendChild(button);
-    }
-
-    if (buttonGroupField < totalGroups) { // 현재 버튼 그룹 다음 버튼 그룹이 있을때
-        const nextButton = document.createElement('button');
-        nextButton.innerText = '>';
-        nextButton.addEventListener('click', () => {
-            buttonGroupField++;
-            //createPaginationButtons(totalPages);
-            const startPage = (buttonGroupField - 1) * buttonsPerGroup + 1; // 새 그룹에 맞게 계산
-            //loadQuotesPage({pageNumber:startPage,size:estimatesPerPageField,status:statusField});
-            loadQuotesPage(startPage);
-        });
-        pageNumberDiv.appendChild(nextButton);
-    }
-}
-
-function updatePagination(totalPages) {
-    createPaginationButtons(totalPages);
-}
-
-
-
-function displayQuotes(count, list) {
-	console.log(list);
-    const quotesContainer = document.getElementById('quotes');
-    const table = document.getElementById('table');
-    const tbody = document.getElementById('tbody');
-
-    // 날짜 형식 변환 함수
-    function formatDate(dateArray) {
-        if (!Array.isArray(dateArray) || dateArray.length < 3) return 'Invalid Date';
-
-        const [year, month, day, hour = 0, minute = 0] = dateArray;
-        const date = new Date(year, month - 1, day, hour, minute);
-
-        let formattedDate = date.toLocaleString('ko-KR', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-
-        // 불필요한 공백 제거
-        formattedDate = formattedDate.replace(/\. /g, '.').replace(/, /g, ' ');
-
-        return formattedDate;
-    }
-    
-    const statusMapping = {
-    	    RECEIVED: "신청",
-    	    IN_PROGRESS: "처리중",
-    	    COMPLETED: "완료",
-    	    DELETE: "삭제"
-    	};
+</script>
+<!-- 견적서 리스트 렌더링 함수 -->
+<script type="text/javascript">
+function displayQuotes(list) {
+	tbody.replaceChildren();
 
     // 테이블 본문 설정
     list.forEach(estimate => {
         const row = document.createElement('tr');
+        row.id = estimate.estimateSeq;
+        
         const rowData = [
         	estimate.estimateSeq,
         	statusMapping[estimate.status],
@@ -462,30 +490,18 @@ function displayQuotes(count, list) {
             estimate.mainAddress,
             formatDate(estimate.createdAt)
         ];
-
+        const inputTd = document.createElement('td');
+        const input = document.createElement('input');
+        input.type="checkbox";
+        input.classList.add("selectCheckbox");
+        input.addEventListener('change',() => rowCheckToggle(event));
+        input.id=estimate.estimateSeq+"checkbox";
+        inputTd.appendChild(input);
+        row.appendChild(inputTd);
+        
         rowData.forEach((data,index) => {
             const td = document.createElement('td');
-            // 상태 텍스트의 색상 변경
-            if (index === 0) { 
-                td.classList.add("estimate_seq");
-            }
-            if (index === 1) { 
-                td.classList.add("status");
-            }
-            if (index === 2) { 
-                td.classList.add("name");
-            }
-            if (index === 3) { 
-                td.classList.add("phone");
-            }
-            if (index === 4) { 
-                td.classList.add("email");
-            }
-            if (index === 8) { 
-                td.classList.add("mainAddress");
-            } 
             td.innerText = data;
-            
             row.appendChild(td);
         });
 
@@ -493,37 +509,181 @@ function displayQuotes(count, list) {
         const buttonTd = document.createElement('td');
         const button = document.createElement('button');
         button.classList.add("seeMore");
+        button.id = estimate.estimateSeq;
         button.innerHTML = "&#9660;"; // 아래 화살표
+        button.addEventListener('click', async() => toggleDetails(row, estimate.estimateSeq));
         buttonTd.appendChild(button);
         row.appendChild(buttonTd);
 
         tbody.appendChild(row);
     });
 
-    table.appendChild(tbody);
-    quotesContainer.appendChild(table);
+}
+</script>
+<!-- 견적서 상세 페이지 렌더링 함수 -->
+<script type="text/javascript">
+function renderingEstimateDetail(data){
+    console.log("renderingEstimateDetail 시작 : " + new Date().toISOString());
+
+	const estimateSeq = data.estimateSeq;
+	const estimateSeqTd = document.getElementById(estimateSeq+"EstimateSeq");
+	const statusTd = document.getElementById(estimateSeq+"Status");
+	const createdAtTd = document.getElementById(estimateSeq+"CreatedAt");
+	const updatedAtTd = document.getElementById(estimateSeq+"UpdatedAt");
+	const nameTd = document.getElementById(estimateSeq+"Name");
+	const phoneTd = document.getElementById(estimateSeq+"Phone");
+	const emailTd = document.getElementById(estimateSeq+"Email");
+	const emailAgreeTd = document.getElementById(estimateSeq+"EmailAgree");
+	const smsAgreeTd = document.getElementById(estimateSeq+"SmsAgree");
+	const callAgreeTd = document.getElementById(estimateSeq+"CallAgree");
+	const addressTd = document.getElementById(estimateSeq+"Address");
+	const contentTd = document.getElementById(estimateSeq+"Content");
+	
+    statusTd.innerText=statusMapping[data.status];
+    createdAtTd.innerText=formatDate(data.createdAt);
+    updatedAtTd.innerText=formatDate(data.updatedAt);
+    nameTd.innerText=data.name ? data.name : "";
+    phoneTd.innerText=data.phone;
+    emailTd.innerText=data.email;
+    emailAgreeTd.innerText=data.emailAgree ? "수락" : "거부";
+    smsAgreeTd.innerText=data.smsAgree ? "수락" : "거부";
+    callAgreeTd.innerText=data.callAgree ? "수락" : "거부";
+    addressTd.innerText="("+data.postcode+") "+data.mainAddress+" "+data.detailAddress ? data.detailAddress : "";
+    contentTd.innerText=data.content ? data.content : "";
+    console.log("renderingEstimateDetail 완료 : " + new Date().toISOString());
+}
+
+//이미지 렌더링
+function renderingEstimateImage(estimateSeq,imageList){
+    console.log("renderingEstimateImage 시작 : " + new Date().toISOString());
+
+    const mimeType = "image/png";
+    const imgListTd = document.getElementById(estimateSeq+"ImgList");
+    imgListTd.replaceChildren();
+
+    if(!imageList){return;}
+    
+    imageList.forEach((image,index)=>{
+	    const img = document.createElement('img');
+	    img.classList.add("estimate_img");
+	    const base64Image = `data:\${mimeType};base64,\${image}`;
+	    img.src = base64Image;
+	    imgListTd.appendChild(img);
+    });
+    console.log("renderingEstimateImage 완료 : " + new Date().toISOString());
+}
+//답글 렌더링
+function renderingEstimateComment(estimateSeq,commentList){
+    console.log("renderingEstimateComment 시작 : " + new Date().toISOString());
+    console.log(commentList);
+    const commentListTd = document.getElementById(estimateSeq+"Comment");
+    commentListTd.replaceChildren();
+    
+    // 댓글 입력 영역 추가 (공통)
+    const appendInputArea = () => {
+        const div = document.createElement('div');
+        const commentInput = document.createElement('textarea');
+        commentInput.classList.add("commentInput");
+        const commentRegiButton = document.createElement('button');
+        commentRegiButton.classList.add("commentRegiButton");
+        commentRegiButton.innerText = "등록";
+        div.appendChild(commentInput);
+        div.appendChild(commentRegiButton);
+        commentListTd.appendChild(div);
+    };
+    
+    if(!commentList){
+    	appendInputArea();
+    	return;
+    }
+    
+    commentList.forEach((comment,index)=>{
+        const div = document.createElement('div');
+        div.classList.add("commentValue");
+        div.id=estimateSeq+"Comment";
+        const p1 = document.createElement('p');
+        p1.innerText=comment.createdAt;
+        const p2 = document.createElement('p');
+        p2.innerText=comment.commentText;
+        div.appendChild(p1);
+        div.appendChild(p2);
+        commentListTd.appendChild(div);
+    });
+
+    appendInputArea();
+    
+    console.log("renderingEstimateComment 완료 : " + new Date().toISOString());
 }
 </script>
 
-<!-- 견적서 요청 API -->
+<!-- 버튼 생성 렌더링 함수 -->
 <script type="text/javascript">
-/* function loadQuotesPage({pageNumber,size,status,periodType,startDate,endDate,year,month,searchType,searchWords}) { */
-function loadQuotesPage(pageNumber) {
-    
-	console.log("statusField : "+statusField+", \n"+
-			"pageNumber : "+pageNumber+", \n"+
-			"estimatesPerPageField : "+estimatesPerPageField+", \n"+
-			"sortTypeField : "+sortTypeField+", \n"+
-			"periodTypeField : "+periodTypeField+", \n"+
-			"startDateField : "+startDateField+", \n"+
-			"endDateField : "+endDateField+", \n"+
-			"yearField : "+yearField+", \n"+
-			"monthField : "+monthField+", \n"+
-			"searchTypeField : "+searchTypeField+", \n"+
-			"searchWordsField : "+searchWordsField
-	);
- 	const tbody = document.querySelector("tbody"); // <tbody> 요소 선택
-	tbody.replaceChildren();
+function createPaginationButtons(totalCount,page) {
+	selectCount.innerText = "총 " + totalCount + "건"; // 카운트 출력
+	
+	const totalPages = Math.ceil(totalCount / estimatesPerPageField); // 총 페이지 수
+
+    const pageNumberDiv = document.getElementById('pageNumberDiv');
+    pageNumberDiv.innerHTML = '';
+
+    const totalGroups = Math.ceil(totalPages / buttonsPerGroup); // 총 버튼 그룹 
+
+    if (buttonGroupField > 1) { // 현재 버튼 그룹이 2 이상일때 "<" 버튼 생성
+        const prevButton = document.createElement('button');
+        prevButton.innerText = '<';
+        prevButton.addEventListener('click', async() => {
+            buttonGroupField--;
+            const startPage = (buttonGroupField - 1) * buttonsPerGroup + 1; // 새 그룹에 맞게 계산
+            try {
+                await estimatePageController(startPage);
+            } catch (error) {
+            	alert(error.message);
+            	consoel.log(error.message);
+            }
+        });
+        pageNumberDiv.appendChild(prevButton);
+    }
+
+    const startPage = (buttonGroupField - 1) * buttonsPerGroup + 1; // 예시: 1, 11, 21, 31 ...
+    const endPage = Math.min(buttonGroupField * buttonsPerGroup, totalPages); // 좌우 둘 중 작은 값 반환
+
+    for (let i = startPage; i <= endPage; i++) {
+        const button = document.createElement('button');
+        button.innerText = i;
+        button.addEventListener('click', async () => {
+            try {
+                await estimatePageController(i); // 비동기 함수 호출
+            } catch (error) {
+                alert(error.message);
+                consoel.log(error.message);
+            }
+        });
+        if(i==page){
+        	button.style.color = "#bebebe";
+        }
+        pageNumberDiv.appendChild(button);
+    }
+
+    if (buttonGroupField < totalGroups) { // 현재 버튼 그룹 다음 버튼 그룹이 있을때
+        const nextButton = document.createElement('button');
+        nextButton.innerText = '>';
+        nextButton.addEventListener('click', async() => {
+            buttonGroupField++;
+            const startPage = (buttonGroupField - 1) * buttonsPerGroup + 1; // 새 그룹에 맞게 계산
+            try {
+                await estimatePageController(startPage);
+            } catch (error) {
+            	alert(error.message);
+            	consoel.log(error.message);
+            }
+        });
+        pageNumberDiv.appendChild(nextButton);
+    }
+}
+</script>
+<!-- 견적서 페이지 리스트 컨트롤러 -->
+<script type="text/javascript">
+async function estimatePageController(pageNumber) {
 	
 	const estimateSearchRequest = {
 		    status: statusField,
@@ -539,204 +699,340 @@ function loadQuotesPage(pageNumber) {
 		    ...(searchWordsField != "" && { searchWords:searchWordsField })
 	  };
 	
-	try {
-	    validateEstimateSearchRequest(estimateSearchRequest);
-	} catch (error) {
-		alert(error.message);
-	    location.reload();
+	try{
+    	validateEstimateSearchRequest(estimateSearchRequest);
+	}catch(error){
+		throw error;
 	}
 	
-	getAllEstimate(estimateSearchRequest);
-}
-async function getAllEstimate(estimateSearchRequest){
-    const queryString = new URLSearchParams(estimateSearchRequest).toString();
+    // 로딩 상태 추가
+	const loadingRow = document.createElement('tr');
+    const loadingTd = document.createElement('td');
+    loadingTd.colSpan = 12; // 테이블 열 수에 맞게 조정
+    loadingTd.style.textAlign = "center";
+    const loadingSpinner = document.createElement('div');
+    loadingSpinner.className = "loading-spinner-container";
+    loadingSpinner.innerHTML = `
+        <div class="loading-spinner"></div>
+        <span>로딩 중...</span>
+    `;
+
+	loadingTd.appendChild(loadingSpinner);
+	loadingRow.appendChild(loadingTd);
+	tbody.appendChild(loadingRow);
 	
-	try {
-		const response = await fetch("/estimate/getAllEstimate?"+queryString, {
-			method: "GET"
-		});
-        if (!response.ok) {
-        	const message = await response.text(); // 서버에서 반환된 메시지 읽기
-            throw new Error("Network response was not ok: "+message);
+	// 부드러운 등장 효과 적용
+	setTimeout(() => {
+	    loadingSpinner.classList.add('show'); // 애니메이션 시작
+	}, 300); 
+	
+	
+    const queryString = new URLSearchParams(estimateSearchRequest).toString();
+    try{
+    	const data = await getEstimateListByEstimateSearchRequest(queryString);
+        const emptyDiv = document.getElementById("emptyDiv"); // 이전 내용을 지우기
+        if (emptyDiv) {
+            emptyDiv.remove();
         }
-        const data = await response.json();
-        if (!data.list || !Array.isArray(data.list)) {
-            throw new Error('Invalid data format');
-        }
-	    createPaginationButtons(data.count,estimateSearchRequest.page); // 동적html 페이지 번호 생성
-		displayQuotes(data.count, data.list);
-    } catch (error) {
-    	alert("로딩 실패.");
-        console.error('Fetch error:', error);
+        createPaginationButtons(data.count,estimateSearchRequest.page); // 동적html 페이지 번호 생성
+    	displayQuotes(data.list); // 페이지 리스트 렌더링
+    }catch(error){
+        tbody.replaceChildren(); // 로딩 상태 제거
+
+        const td = document.createElement('td');
+        td.colSpan = 12; 
+        td.style.textAlign = "center"; 
+
+        const emptyDiv = document.createElement('div'); 
+        emptyDiv.id = "emptyDiv";
+        emptyDiv.innerText = error.message; 
+
+        td.appendChild(emptyDiv); 
+        const errorRow = document.createElement('tr');
+        errorRow.appendChild(td); 
+        tbody.appendChild(errorRow); 
+
+        throw error; 
     }
 }
 </script>
 
+<!-- 견적서 상세 페이지 토글 클릭시 -->
+<script type="text/javascript">
+async function toggleDetails(row, estimateSeq) {
+    console.log("toggleDetails 시작 : " + new Date().toISOString());
+
+    const nextRow = row.nextElementSibling;
+
+    if (nextRow && nextRow.classList.contains('details-row')) {
+        nextRow.classList.toggle('hidden');
+    } else {
+        const detailsRow = document.createElement('tr');
+        detailsRow.classList.add('details-row');
+
+        const detailsTd = document.createElement('td');
+        detailsTd.colSpan = 12; // 전체 열 차지
+        detailsTd.innerHTML = `
+            <table class="details-table">
+                <tbody>
+                    <tr>
+                        <td>접수번호</td>
+                        <td id=\${estimateSeq}EstimateSeq>\${estimateSeq}</td>
+                        <td>상태</td>
+                        <td id=\${estimateSeq}Status></td>
+                        <td>생성일시</td>
+                        <td id=\${estimateSeq}CreatedAt></td>
+                        <td>수정 일시</td>
+                        <td id=\${estimateSeq}UpdatedAt></td>
+                    </tr>
+                    <tr>
+                        <td>이름</td>
+                        <td id=\${estimateSeq}Name></td>
+                        <td>연락처</td>
+                        <td id=\${estimateSeq}Phone></td>
+                        <td>이메일</td>
+                        <td id=\${estimateSeq}Email class='emailValueTd' colspan='3'></td>
+                    </tr>
+                    <tr>
+                        <td>이메일 동의</td>
+                        <td id=\${estimateSeq}EmailAgree></td>
+                        <td>SMS 동의</td>
+                        <td id=\${estimateSeq}SmsAgree></td>
+                        <td>전화 동의</td>
+                        <td id=\${estimateSeq}CallAgree></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+	                    <td>주소</td>
+	                    <td id=\${estimateSeq}Address class='addressValueTd' colspan='7'></td>
+                	</tr>
+                	<tr>
+	                    <td>내용</td>
+	                    <td id=\${estimateSeq}Content class='contentValueTd' colspan='7'></td>
+                	</tr>
+                	<tr class="imgListTr">
+	                    <td>이미지</td>
+	                    <td id=\${estimateSeq}ImgList class='imageValueTd' colspan='7'>
+	                    <div class="loading-spinner-container show">
+	        				<div class="loading-spinner"></div>
+	        	            <span>로딩 중...</span>
+    					</div>
+	                    </td>
+            		</tr>
+                	<tr>
+    	                <td>답글</td>
+	        			<td id=\${estimateSeq}Comment class='commentValueTd' colspan='7'>
+	        				<div class="loading-spinner-container show">
+		        				<div class="loading-spinner"></div>
+		        	            <span>로딩 중...</span>
+	        				</div>
+	        			</td>
+	        		</tr>
+                </tbody>
+            </table>
+        `;
+
+        detailsRow.appendChild(detailsTd);
+        row.after(detailsRow);
+
+        try{
+        	const data = await getEstimateTextByEstimateSeq(estimateSeq);
+        	renderingEstimateDetail(data);
+        	const commentList = await getCommentListByEstimateSeq(estimateSeq);
+        	renderingEstimateComment(estimateSeq,commentList);
+        	const imageList = await getEstimateImagesByEstimateSeq(estimateSeq);
+        	renderingEstimateImage(estimateSeq,imageList);
+        }catch(error){
+        	alert(error.message);
+        }
+    }
+    console.log("toggleDetails 종료 : " + new Date().toISOString());
+
+}
+</script>
 <!-- 상태 클릭시 -->
 <script type="text/javascript">
-function statusClick(event) {
+async function statusClick(event) {
   const clickedDiv = event.target;
   const id = clickedDiv.id; // 클릭한 div의 ID를 가져옴
+  const oldStatusField = statusField;
+  const oldButtonGroupField = buttonGroupField;
+  
+  //필드 값 설정
   statusField = id.toUpperCase();
   buttonGroupField = 1;
-  loadQuotesPage(1);
   
-  statusDivs.forEach(div => {
-    div.className = "";
-    div.className = "statusType";
-  });
-  // 클릭된 div만 클래스 설정
-  clickedDiv.className = "";
-  clickedDiv.className = "statusType selectType";
+  try{
+	await estimatePageController(1);
+	
+	// 클릭된 div만 클래스 설정
+	statusDivs.forEach(div => div.classList.remove("selectType"));
+	clickedDiv.classList.add("selectType");
+
+  }catch(error){
+	// 필드 값 복구
+	statusField = oldStatusField;
+	buttonGroupField = oldButtonGroupField;
+	
+	alert(error.message);
+	return;
+  }
+}
+</script>
+<!-- 기간(전체,오늘,7일,30일) 클릭시 --><script type="text/javascript">
+async function dateClick(event) {
+	const clickedDiv = event.target;
+	const oldPeriodTypeField = periodTypeField;
+	const oldButtonGroupField = buttonGroupField;
+	  
+	  //필드 값 설정
+	  periodTypeField = clickedDiv.id.toUpperCase();
+	  buttonGroupField = 1;
+	 
+	try{
+		  await estimatePageController(1);
+		  
+	      resetStyles(dateButtons, "selectType");
+	      resetStyles(monthButtons, "selectType");
+	      resetStyles(rangeInputs, "selectType");
+	      clickedDiv.classList.add("selectType");
+      
+	}catch(error){
+		// 필드값 복구
+		
+		periodTypeField = oldPeriodTypeField;
+		buttonGroupField = oldButtonGroupField;
+	
+		alert(error.message);
+	 }
+	  
 }
 </script>
 
-<!-- 기간(전체,오늘,7일,30일) 클릭시 -->
-<script type="text/javascript">
-function dateClick(event) {
-	  const clickedDiv = event.target;
-	  const id = clickedDiv.id; // 클릭한 div의 ID를 가져옴
-	  periodTypeField = id.toUpperCase();
-	  buttonGroupField = 1;
-	  loadQuotesPage(1);
-	  
-	  // 기간 div의 클래스 초기화
-	  dateButtons.forEach(div => {
-	  	div.classList.remove("selectType");
-	  });
-	  
-	  //월별 조회 div 클래스 초기화
-	  monthButtons.forEach(div => {
-	    div.classList.remove("selectType");
-	    div.value="";
-	  });
-	  
-	  //직접 입력 기간 조회 div 클래스 초기화
-	  rangeInputs.forEach(div => {
-	    div.classList.remove("selectType");
-	    div.value="";
-	  });
-	  
-	  // 클릭된 div만 클래스 설정
-	  event.target.classList.add("selectType");
-}
-</script>
 <!-- 기간(월별) 클릭시 -->
 <script type="text/javascript">
-function monthChange(event) {
-	  
-	  yearField = document.getElementById("yearSelect").value;
-	  monthField = document.getElementById("monthSelect").value;
-	  
-	  if(!yearField || !monthField || isNaN(yearField) || isNaN(monthField)){
-		  yearField="";
-		  monthField="";
-		  return;
-	  }
-	  
-	  periodTypeField = "MONTHLY";
-	  buttonGroupField = 1;
-	  loadQuotesPage(1);
+async function monthChange(event) {
+	
+	//필드 값 설정1
+	yearField = document.getElementById("yearSelect").value;
+	monthField = document.getElementById("monthSelect").value;
 
-	  // 기간 div의 클래스 초기화
-	  dateButtons.forEach(div => {
-	  	div.classList.remove("selectType");
-	  });
-	  
-	  //직접 입력 기간 조회 div 클래스 초기화
-	  rangeInputs.forEach(div => {
-	    div.classList.remove("selectType");
-	    div.value="";
-	  });
-	  
-	  // 클릭된 div만 클래스 설정
-	  monthButtons.forEach(div => {
-		  div.classList.add("selectType");
-	  });
-	  
+	if(!yearField || !monthField || isNaN(yearField) || isNaN(monthField)){
+		yearField="";
+		monthField="";
+		return;
 	}
+
+	 //필드 값 설정2
+	 periodTypeField = "MONTHLY";
+	 buttonGroupField = 1;
+	 
+	 try{
+	 	await estimatePageController(1);
+	 	
+		resetStyles(dateButtons, "selectType");
+		resetStyles(rangeInputs, "selectType");
+		 monthButtons.forEach(div => {
+		  div.classList.add("selectType");
+		 });
+		 
+	 }catch(error){
+		//필드 값 복구
+		yearField="";
+		monthField="";
+		alert(error.message);
+	 }
+}
 </script>
 <!-- 기간(범위) 클릭시 -->
 <script type="text/javascript">
-function rangeClick(event) {
+async function rangeClick(event) {
+	
+	//필드 값 설정
 	startDateField = document.getElementById("startDate").value;
 	endDateField = document.getElementById("endDate").value;
-	
-	 if(!startDateField || !endDateField || isNaN(new Date(startDateField).getTime()) || isNaN(new Date(endDateField).getTime())){
-		 startDateField = "";
-		 endDateField = "";
-		 alert("정확한 기간을 입력해 주세요.");
-	  return;
-	 }
-	 
 	periodTypeField = "RANGE";
 	buttonGroupField = 1;
-	loadQuotesPage(1);
-
-	// 기간 div의 클래스 초기화
-	dateButtons.forEach(div => {
-		div.classList.remove("selectType");
-	});
 	
-	//직접 입력 기간 조회 div 클래스 초기화
-	monthButtons.forEach(div => {
-	  div.classList.remove("selectType");
-	  div.value="";
-	});
-	
-	// 클릭된 div만 클래스 설정
-	rangeInputs.forEach(div => {
-	  div.classList.add("selectType");
-	});
-	  
+	try{
+		await estimatePageController(1);
+		resetStyles(dateButtons, "selectType");
+		resetStyles(monthButtons, "selectType");
+		rangeInputs.forEach(div => {
+		 div.classList.add("selectType");
+		});
+	}catch(error){
+		//필드 값 복구
+		startDateField = "";
+		endDateField = "";
+		alert(error.message);
+	}
 }
 </script>
 <!-- 검색 클릭시 -->
 <script type="text/javascript">
-function searchClick(event) {
-	searchTypeField = document.getElementById("searchTypeSelect").value.toUpperCase();;
-	searchWordsField = document.getElementById("searchWordsInput").value;
+async function searchClick(event) {
+	const searchTypeSelect = document.getElementById("searchTypeSelect");
+	const searchWordsInput = document.getElementById("searchWordsInput");
+
+	//필드 값 설정
+	searchTypeField = searchTypeSelect.value.toUpperCase();
+	searchWordsField = searchWordsInput.value;
+	buttonGroupField = 1;
 	
-	if(!searchTypeField || !searchWordsField){
-	 startDateField = "";
-	 endDateField = "";
-	 alert("정확한 단어를 입력해 주세요.");
-	 return;
+	if(!searchTypeField || !searchWordsField ){
+		searchTypeField="";
+		searchWordsField="";
+		alert("검색어를 선택 및 입력해 주세요.");
+		return;
 	}
 	
-	buttonGroupField = 1;
-	loadQuotesPage(1);
-	createSearchItemDiv();
+	//검색창 비우기
+	searchWordsInput.value = "";
+	
+	try{
+		await estimatePageController(1);
+		createSearchItemDiv();
+	}catch(error){
+		searchTypeField="";
+		searchWordsField="";
+		alert(error.message);
+	}
 }
 
 function createSearchItemDiv() {
-    // 검색 필드 값으로 div 생성
+	 const oldSearchItem = document.querySelector(".searchItem");
+     if(oldSearchItem) {
+    	 oldSearchItem.remove();
+     }
+     
     const searchSelects = document.getElementById("searchSelects"); // div 컨테이너
-    const newDiv = document.createElement("div"); // 새로운 div 생성
-    newDiv.classList.add("searchItem"); // 클래스 추가 (선택적)
+    const searchItem = document.createElement("div"); // 새로운 div 생성
+    searchItem.classList.add("searchItem"); 
+    searchItem.classList.add("selectType");
     
     const displayType = typeMapping[searchTypeField] || searchTypeField; // 변환 실패 시 원래 값을 사용
 
     // 텍스트 노드 추가
     const textNode = document.createTextNode(displayType + " : " + searchWordsField);
-    newDiv.appendChild(textNode);
+    searchItem.appendChild(textNode);
 
     // x 버튼 생성
-    const closeButton = document.createElement("button");
-    closeButton.className = "closeButton";
-    closeButton.style.marginLeft = "10px";
-    closeButton.textContent = "x";
+    const searchItemCloseButton = document.createElement("button");
+    searchItemCloseButton.className = "searchItemCloseButton";
+    searchItemCloseButton.textContent = "x";
 
     // x 버튼 클릭 이벤트 추가
-    closeButton.addEventListener("click", function () {
-    	deleteSearchItemDiv(newDiv); // B 함수 호출 (div를 삭제)
+    searchItemCloseButton.addEventListener("click", function () {
+    	deleteSearchItemDiv(searchItem); // B 함수 호출 (div를 삭제)
     });
 
     // x 버튼을 div에 추가
-    newDiv.appendChild(closeButton);
+    searchItem.appendChild(searchItemCloseButton);
 
     // 생성된 div를 컨테이너에 추가
-    searchSelects.appendChild(newDiv);
+    searchSelects.appendChild(searchItem);
 }
 function deleteSearchItemDiv(targetDiv) {
     // div 삭제
@@ -745,7 +1041,7 @@ function deleteSearchItemDiv(targetDiv) {
     // 필드 변수 초기화
     searchTypeField = "";
     searchWordsField = "";
-    loadQuotesPage(1);
+    estimatePageController(1);
 }
 </script>
 
@@ -754,16 +1050,46 @@ function deleteSearchItemDiv(targetDiv) {
 function sizeChange(event) {
 	estimatesPerPageField = event.target.value;
 	buttonGroupField = 1;
-	loadQuotesPage(1);
+	estimatePageController(1);
 }
 </script>
+<!-- 선택 체크 클릭시 -->
+<script type="text/javascript">
+function rowCheckToggle(event) {
+    const id = event.target.id; // 이벤트가 발생한 요소의 id 가져오기
+    const result = event.target.checked; // 이벤트가 발생한 요소의 id 가져오기
+    const backgroundColor = result ? "#f1f6ff" : "unset";
+    
+    if (id === "allCheck") { // id가 "allCheck"인 경우 (전체 선택)
+        const presentTbody = document.getElementById("tbody"); // tbody 요소 가져오기
+        const allTr = presentTbody.querySelectorAll("tr"); // tbody 내 모든 tr 요소 가져오기
+        const selectCheckbox = presentTbody.querySelectorAll(".selectCheckbox"); // tbody 내 모든 tr 요소 가져오기
+
+        // 각 tr 요소의 배경색 변경
+        allTr.forEach(row => {row.style.backgroundColor = backgroundColor;});
+        // 각 checkbox 변경
+        selectCheckbox.forEach(checkbox => {checkbox.checked=result;});
+    } else { // 개별 체크박스일 경우
+        const estimateSeq = id.replace("checkbox", ""); // id에서 "checkbox" 제거하여 행 ID 추출
+        const row = document.getElementById(estimateSeq); // 해당 행 요소 가져오기
+        row.style.backgroundColor = backgroundColor; // 해당 행의 배경색 변경
+    }
+}
+</script>
+
+<!-- 접기 클릭시 -->
+<script type="text/javascript">
+function allSeemoreCloseClick() {
+	const detailsRow = document.querySelectorAll('.details-row');
+	detailsRow.forEach((row)=>{row.classList.add('hidden');});
+}
+</script>
+
 
 <!-- validateEstimateSearchRequest 검증 함수 -->
 <script type="text/javascript">
 function validateEstimateSearchRequest(request) {
-	console.log(request);
 	
-    // Pagination validation
     if (request.page < 1 || request.size < 10) {
         throw new Error("페이지는 1 이상, 사이즈는 10 이상 값이어야 합니다.");
     }
@@ -812,6 +1138,7 @@ function validateEstimateSearchRequest(request) {
 
     // Search validation
     if (request.searchType && request.searchWords) {
+        request.searchWords = request.searchWords.trim();
         switch (request.searchType) {
             case "ADDRESS":
             case "NAME":
@@ -844,13 +1171,150 @@ function validateEstimateSearchRequest(request) {
     return true; // If all validations pass
 }
 </script>
-<!-- 현재 모든 상태 카운트 기입 함수 -->
 <script type="text/javascript">
+/* 현재 모든 상태 카운트 기입 함수 */
 function innerTextTotalQuotesCount(countMap) {
     allCount.innerText = countMap.ALL; 
     receivedCount.innerText = countMap.RECEIVED;
     inprogressCount.innerText = countMap.IN_PROGRESS;
     completedCount.innerText = countMap.COMPLETED;
+}
+/* 공통 이벤트 등록 함수 */
+function addEventListeners(elements, eventType, handler) {
+    elements.forEach(element => {
+        element.addEventListener(eventType, handler);
+    });
+}
+/* 공통 초기화 함수 */
+function resetStyles(elements, className) {
+    elements.forEach(element => {
+        element.classList.remove(className);
+        if (element.tagName === "INPUT" || element.tagName === "SELECT") {
+            element.value = ""; // 입력값 초기화
+        }
+    });
+}
+/* 날짜 형식 변환 함수 */
+function formatDate(dateArray) {
+    if (!Array.isArray(dateArray) || dateArray.length < 3) return 'Invalid Date';
+
+    const [year, month, day, hour = 0, minute = 0] = dateArray;
+    const date = new Date(year, month - 1, day, hour, minute);
+
+    return date.toLocaleString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    }).replace(/\. /g, '.').replace(/, /g, ' ');
+}
+</script>
+<!-- 전체 카운트 요청 API -->
+<script type="text/javascript">
+async function getTotalQuotesCount() {
+    const response = await fetch('/estimate/getCountAll');
+    const countMap = await response.json();
+    return countMap;
+}
+</script>
+<!-- 견적서 요청 API -->
+<script type="text/javascript">
+async function getEstimateListByEstimateSearchRequest(estimateSearchRequest) {
+	
+	const response = await fetch("/estimate/getEstimateListByEstimateSearchRequest?"+estimateSearchRequest, {method: "GET"});
+	
+	if (response.status === 404) {
+	    const message = await response.text();
+	    console.log(message); 
+	    throw new Error(message);
+	} else if (!response.ok) {
+	    const message = await response.text(); 
+	    console.log(message);
+	    throw new Error("서버 접속 실패");
+	}
+    
+    const data = await response.json();
+    console.log(data);
+	return data;
+}
+</script>
+<!-- 상세 견적서 요청 API -->
+<script type="text/javascript">
+async function getEstimateTextByEstimateSeq(estimateSeq){
+    console.log("getEstimateTextByEstimateSeq 시작 : " + new Date().toISOString());
+    
+	const response = await fetch("/estimate/getEstimateTextByEstimateSeq?estimate_seq="+estimateSeq);
+	
+	if (response.status === 404) {
+	    const message = await response.text();
+	    console.log(message); 
+	    throw new Error(message);
+	} else if (!response.ok) {
+	    const message = await response.text(); 
+	    console.log(message);
+	    throw new Error("서버 접속 실패");
+	}
+    
+    const data = await response.json();
+    
+    if (data) {
+    	console.log(data);
+	    console.log("getEstimateTextByEstimateSeq 종료 : " + new Date().toISOString());
+    	return data;
+    }
+}
+</script>
+<!-- 이미지 요청 API -->
+<script type="text/javascript">
+async function getEstimateImagesByEstimateSeq(estimateSeq){
+    console.log("getEstimateImagesByEstimateSeq 시작 : " + new Date().toISOString());
+    
+	const response = await fetch("/estimate/getEstimateImagesByEstimateSeq?estimateSeq="+estimateSeq);
+	
+	if (response.status === 204) {
+	    const message = await response.text();
+	    console.log(message); 
+	    return;
+	} else if (!response.ok) {
+	    const message = await response.text(); 
+	    console.log(message);
+	    throw new Error("서버 접속 실패");
+	}
+    
+    const data = await response.json();
+    
+    if (data) {
+    	console.log(data);
+	    console.log("getEstimateImagesByEstimateSeq 종료 : " + new Date().toISOString());
+    	return data;
+    }
+}
+</script>
+<!-- 답글 요청 API -->
+<script type="text/javascript">
+async function getCommentListByEstimateSeq(estimateSeq){
+    console.log("getCommentListByEstimateSeq 시작 : " + new Date().toISOString());
+    
+	const response = await fetch("/comment/getCommentListByEstimateSeq?estimateSeq="+estimateSeq);
+	
+	if (response.status === 204) {
+	    const message = await response.text();
+	    console.log(message); 
+	    return;
+	} else if (!response.ok) {
+	    const message = await response.text(); 
+	    console.log(message);
+	    throw new Error("서버 접속 실패");
+	}
+    
+    const data = await response.json();
+    
+    if (data) {
+    	console.log(data);
+	    console.log("getCommentListByEstimateSeq 종료 : " + new Date().toISOString());
+    	return data;
+    }
 }
 </script>
 </html>

@@ -94,7 +94,7 @@ iframe{
 }
 </style>
 </head>
-<%@ include file="main_header.jsp"%>
+<%@ include file="main/main_header.jsp"%>
 <script type="text/javascript">
 	
 document.addEventListener('DOMContentLoaded', function () {
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	</div>
 
-<%@ include file="main_footer.jsp"%>
+<%@ include file="main/main_footer.jsp"%>
 <%@ include file="footerlayerLoad.jsp"%>
 </body>
 <script type="text/javascript">

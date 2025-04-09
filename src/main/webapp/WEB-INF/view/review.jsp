@@ -17,12 +17,12 @@
 </style>
 </head>
 <body>
-<%@ include file="main_header.jsp"%>
+<%@ include file="/WEB-INF/view/main/main_header.jsp"%>
 
 <div id="mainContainer">
 
 </div>
 
-<%@ include file="main_footer.jsp"%>
+<%@ include file="/WEB-INF/view/main/main_footer.jsp"%>
 </body>
 </html>
