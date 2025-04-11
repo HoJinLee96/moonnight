@@ -17,7 +17,7 @@ import lombok.Setter;
 //  create table `verification`(
 //      `verification_seq` INT AUTO_INCREMENT PRIMARY KEY ,
 //      `request_ip` VARCHAR(50) NOT NULL,
-//      `to` VARCHAR(50) NOT NULL,
+//      `recipient` VARCHAR(50) NOT NULL,
 //      `verification_code` VARCHAR(6) NOT NULL,
 //      `send_status` INT NOT NULL,
 //      `created_at` DATETIME DEFAULT NOW(),
@@ -39,8 +39,8 @@ public class Verification {
   @Column(name = "request_ip", length = 50, nullable = false)
   private String requestIp;
 
-  @Column(name = "to", length = 50, nullable = false)
-  private String to; 
+  @Column(name = "recipient", length = 50, nullable = false)
+  private String recipient; 
 
   @Column(name = "verification_code", length = 6, nullable = false)
   private String verificationCode;
@@ -48,7 +48,7 @@ public class Verification {
   @Column(name = "send_status", nullable = false)
   private int sendStatus;
 
-  @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
+  @Column(name = "created_at", insertable = false, updatable = false)
   private LocalDateTime createdAt;
   
   @Column(name = "verify")

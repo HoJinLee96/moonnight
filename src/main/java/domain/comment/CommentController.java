@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import auth.login.token.CustomUserDetails;
+import auth.sign.token.CustomUserDetails;
 import domain.user.User.UserProvider;
 import global.util.ApiResponse;
 import lombok.RequiredArgsConstructor;

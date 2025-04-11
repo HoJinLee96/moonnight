@@ -1,4 +1,4 @@
-package auth.login.log;
+package auth.sign.log;
 
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import auth.login.log.LoginLog.LoginResult;
+import auth.sign.log.LoginLog.LoginResult;
 import domain.user.User.UserProvider;
 import jakarta.transaction.Transactional;
 

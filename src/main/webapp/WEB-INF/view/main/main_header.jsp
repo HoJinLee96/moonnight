@@ -146,7 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		<nav class = "top_nav">
 			<ul id="login-header" style="display:none">
 				<li><a href="/signin">로그인</a></li>
-				<li><a href="/signup">회원가입</a></li>
+				<li><a href="/signup1">회원가입</a></li>
 				<li><a href="">고객센터</a></li>
 			</ul>
 			<ul id="user-header" style="display:none">

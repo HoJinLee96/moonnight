@@ -1,4 +1,4 @@
-package auth.login;
+package auth.sign;
 
 import java.util.List;
 import java.util.Map;
@@ -9,10 +9,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import auth.crypto.JwtTokenProvider;
-import auth.login.log.LoginLog.LoginResult;
-import auth.login.log.LoginLogService;
 import auth.redis.TokenStore;
 import auth.redis.TokenStore.TokenType;
+import auth.sign.log.LoginLogService;
+import auth.sign.log.LoginLog.LoginResult;
 import domain.user.User;
 import domain.user.User.UserProvider;
 import domain.user.User.UserStatus;
@@ -29,7 +29,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class LoginService {
+public class SigninService {
 
   private final UserService userService;
   private final UserRepository userRepository;
@@ -38,11 +38,11 @@ public class LoginService {
   private final JwtTokenProvider jwtTokenProvider;
   private final TokenStore tokenStore;
   private final GuidanceService guidanceService;
-  private static final Logger logger = LoggerFactory.getLogger(LoginService.class);
+  private static final Logger logger = LoggerFactory.getLogger(SigninService.class);
   private final Map<UserProvider,String> roles = Map.of(UserProvider.LOCAL,"ROLE_USER",UserProvider.KAKAO,"ROLE_OAUTH",UserProvider.NAVER,"ROLE_OAUTH");
   
   @Transactional
-  public Map<String,String> loginLocal(LoginRequestDto loginRequestDto, String ip) {
+  public Map<String,String> loginLocal(SigninRequestDto loginRequestDto, String ip) {
     
     String email = loginRequestDto.email();
     String password = loginRequestDto.password();

@@ -1,35 +1,33 @@
-package auth.login.token;
+package auth.sign.token;
 
 import java.util.Collection;
 import java.util.List;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import domain.user.User.UserProvider;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class CustomUserDetails implements UserDetails {
+public class GuestUserDetails implements UserDetails{
+  
+  private final int verificationId;
+  private final String phone;
+  private final List<GrantedAuthority> authorities;
 
-  private final int userId;
-  private final UserProvider userProvider; 
-  private final String email; 
-  private final List<GrantedAuthority> authorities; 
- 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
-      return authorities;
+    return authorities;
   }
 
   @Override
   public String getPassword() {
-      return null; 
+    return null;
   }
 
   @Override
   public String getUsername() {
-      return email; 
+    return phone;
   }
 
   @Override

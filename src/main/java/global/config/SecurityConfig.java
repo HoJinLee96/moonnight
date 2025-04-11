@@ -27,9 +27,9 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import auth.login.token.filter.JwtLoginFilter;
-import auth.login.token.filter.JwtVerifyPhoneFilter;
 import auth.oauth.OAuth2LoginSuccessHandler;
+import auth.sign.token.filter.JwtLoginFilter;
+import auth.sign.token.filter.JwtVerifyPhoneFilter;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -66,7 +66,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain loginSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher("/api/**") // 모든 API 경로에 대해 기본 설정 적용
+            .securityMatcher("/api/private/**") // 모든 API 경로에 대해 기본 설정 적용
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
@@ -104,6 +104,18 @@ public class SecurityConfig {
               .successHandler(oauth2LoginSuccessHandler))
           .build();
     }
+//    
+//    @Bean
+//    public SecurityFilterChain swaggerSecurityFilterChain(HttpSecurity http) throws Exception {
+//        http
+//            .securityMatcher("/swagger-ui/**", "/v3/api-docs/**")
+//            .authorizeHttpRequests(auth -> auth
+//                .anyRequest().permitAll()
+//            )
+//            .csrf(AbstractHttpConfigurer::disable);
+//
+//        return http.build();
+//    }
 
     
     // 사용자 정보를 커스터마이징 처리

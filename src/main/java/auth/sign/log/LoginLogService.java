@@ -1,8 +1,8 @@
-package auth.login.log;
+package auth.sign.log;
 
 import java.util.List;
 import org.springframework.stereotype.Service;
-import auth.login.log.LoginLog.LoginResult;
+import auth.sign.log.LoginLog.LoginResult;
 import domain.user.User.UserProvider;
 import global.exception.TooManyLoginFailuresException;
 import jakarta.transaction.Transactional;

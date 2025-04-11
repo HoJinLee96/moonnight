@@ -3,67 +3,44 @@ package domain.user;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import auth.login.token.CustomUserDetails;
+import auth.sign.token.CustomUserDetails;
 import domain.user.User.UserProvider;
 import global.annotation.ValidEmail;
-import global.annotation.ValidPassword;
 import global.annotation.ValidPhone;
 import global.util.ApiResponse;
+import jakarta.annotation.security.PermitAll;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/private/local/user")
 @RequiredArgsConstructor
+@RequestMapping("/api/public/local/user")
 public class LocalUserInfoController {
   
   private final UserService userService;
 
-  @PostMapping("/join/1")
-  public ResponseEntity<ApiResponse<String>> createJoinToken(
-      @RequestHeader("X-Verification-Email-Token") String verificationEmailToken,
-      @RequestParam @ValidEmail String email,
-      @RequestParam @ValidPassword String password) {
-
-    String joinToken = userService.createJoinToken(email, password, verificationEmailToken);
-
-    return ResponseEntity.ok(ApiResponse.of(200, "회원가입 1차 성공", joinToken));
-  }
-    
-  @PostMapping("/join/2")
-  public ResponseEntity<ApiResponse<String>> join2(
-      @RequestHeader("X-Access-Join-Token") String accessJoinToken,
-      @RequestHeader("X-Verification-Phone-Token") String verificationPhoneToken,
-      @RequestBody @Valid UserCreateRequestDto userCreateRequestDto) {
-  
-    String name = userService.joinLocalUser(userCreateRequestDto, accessJoinToken, verificationPhoneToken);
-    
-    return ResponseEntity.ok(ApiResponse.of(200, "회원 가입 성공.", name));
-  }
-  
-  
 //  휴대폰 인증 통해 이메일 찾기 
-    @PostMapping("/find/email/by/phone")
-    public ResponseEntity<?> verifyPhoneAndGetEmail(
+  @PermitAll 
+  @PostMapping("/find/email/by/phone")
+  public ResponseEntity<?> verifyPhoneAndGetEmail(
       @RequestHeader("X-Verification-Phone-Token") String token,
       @RequestBody Map<String,String> requestBody){
-      
-        String reqPhone = requestBody.get("phone");
-        
-        String findPwToken = userService.verifyPhoneForEmail(UserProvider.LOCAL,reqPhone,token);
-        
-        return ResponseEntity.ok(ApiResponse.of(200, "조회 성공", findPwToken));
-    }
+    
+    String reqPhone = requestBody.get("phone");
+    
+    String findPwToken = userService.verifyPhoneForEmail(UserProvider.LOCAL,reqPhone,token);
+    
+    return ResponseEntity.ok(ApiResponse.of(200, "조회 성공", findPwToken));
+  }
   
 //  휴대폰 인증 통해 비밀번호 찾기 
+  @PermitAll
   @PostMapping("/find/pw/by/phone")
   public ResponseEntity<?> verifyPhoneAndCreateFindPwToken(
       @RequestHeader("X-Verification-Phone-Token") String token,
@@ -78,6 +55,7 @@ public class LocalUserInfoController {
   }
   
 //  이메일 인증 통해 비밀번호 찾기 
+  @PermitAll
   @PostMapping("/find/pw/by/email")
   public ResponseEntity<?> verifyEmailAndCreateFindPwToken(
       @RequestHeader("X-Verification-Email-Token") String token,
@@ -91,6 +69,7 @@ public class LocalUserInfoController {
   }
   
   // (휴대폰,이메일) 인증 통해 비밀번호 변경
+  @PermitAll
   @PostMapping("/update/pw")
   public ResponseEntity<?> updatePasswordByFindPwToken(
       @RequestHeader("X-Access-Findpw-Token") String token,
@@ -109,6 +88,7 @@ public class LocalUserInfoController {
   }
   
   // 비밀번호 검사 통해 비밀번호 변경
+  @PermitAll
   @PostMapping("/delete")
   public ResponseEntity<ApiResponse<?>> stopUser(
       @RequestHeader("X-Access-Password-Token") String accessPasswordToken,
@@ -119,18 +99,21 @@ public class LocalUserInfoController {
     return ResponseEntity.ok(ApiResponse.of(200, "회원 탈퇴 성공.", null));
   }
   
-  @GetMapping("/exist/email")
-  public ResponseEntity<ApiResponse<Void>> isEmailExists(@RequestParam @ValidEmail String reqEmail) {
-  
-    userService.isEmailExists(UserProvider.LOCAL, reqEmail);
-  
+  // 이메일 중복 검사
+  @PermitAll
+  @PostMapping("/exist/email")
+  public ResponseEntity<ApiResponse<Void>> isEmailExists(@RequestParam("email") @ValidEmail String email) {
+    System.out.println("이메일 검증시작 email: "+email);
+    userService.isEmailExists(UserProvider.LOCAL, email);
     return ResponseEntity.ok(ApiResponse.of(200, "조회 성공", null));
   }
   
+  // 휴대폰 중복 검사
+  @PermitAll
   @PostMapping("/exist/phone")
-  public ResponseEntity<ApiResponse<Void>> isPhoneExists(@RequestParam @ValidPhone String reqPhone) {
+  public ResponseEntity<ApiResponse<Void>> isPhoneExists(@RequestParam("phone") @ValidPhone String phone) {
 
-    userService.isPhoneExists(UserProvider.LOCAL, reqPhone);
+    userService.isPhoneExists(UserProvider.LOCAL, phone);
     
     return ResponseEntity.ok(ApiResponse.of(200, "조회 성공", null));
   }

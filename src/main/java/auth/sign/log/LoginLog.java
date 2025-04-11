@@ -1,4 +1,4 @@
-package auth.login.log;
+package auth.sign.log;
 
 import java.time.LocalDateTime;
 import domain.user.User.UserProvider;

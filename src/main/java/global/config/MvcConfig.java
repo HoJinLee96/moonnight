@@ -33,5 +33,14 @@ public class MvcConfig implements WebMvcConfigurer {
 	  registry.addInterceptor(clientIpInterceptor)
       .addPathPatterns("/**"); 
 	}
+//	
+//    @Override
+//    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+//        registry.addResourceHandler("/swagger-ui/**")
+//                .addResourceLocations("classpath:/META-INF/resources/webjars/swagger-ui/");
+//
+//        registry.addResourceHandler("/v3/api-docs/**")
+//                .addResourceLocations("classpath:/META-INF/resources/");
+//    }
 	
 }

@@ -236,11 +236,23 @@
 	        <artifactId>hibernate-core</artifactId>
 	        <version>6.5.2.Final</version> <!-- JPA 버전과 호환되는지 확인 -->
 	    </dependency>
+	    <dependency>
+		  <groupId>org.hibernate.validator</groupId>
+		  <artifactId>hibernate-validator</artifactId>
+		  <version>8.0.1.Final</version> <!-- 또는 최신 안정 버전 -->
+		</dependency>
 	    
 	    <dependency>
 		    <groupId>net.bytebuddy</groupId>
 		    <artifactId>byte-buddy</artifactId>
 		    <version>1.14.10</version> <!-- Hibernate 6.5+ 호환 -->
+		</dependency>
+		
+		<!-- valid 커스텀 애노에티션 사용시 필요-->
+		<dependency>
+		  <groupId>org.glassfish</groupId>
+		  <artifactId>jakarta.el</artifactId>
+		  <version>4.0.2</version>
 		</dependency>
 	    
         <!-- Spring Transaction 관리 -->
@@ -273,11 +285,11 @@
 		</dependency>
 		
 		<dependency>
-  <groupId>org.hashids</groupId>
-  <artifactId>hashids</artifactId>
-  <version>1.0.3</version>
-</dependency>
-
+		  <groupId>org.hashids</groupId>
+		  <artifactId>hashids</artifactId>
+		  <version>1.0.3</version>
+		</dependency>
+		
 	</dependencies>
 
 <build>

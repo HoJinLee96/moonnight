@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 public class RateLimiterStore {
 
   private final RedisTemplate<String, String> redisTemplate;
-  private static final int MAX_VERIFY_REQUESTS = 5; // 최대 요청 횟수
+  private static final int MAX_VERIFY_REQUESTS = 20; // 최대 요청 횟수
   private static final int MAX_IP_REQUESTS = 20; // 최대 요청 횟수
   private static final long EXPIRATION_30MINUTE = 30; // 제한 시간 (분)
 

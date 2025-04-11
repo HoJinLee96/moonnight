@@ -1,10 +1,12 @@
-package auth.login;
+package auth.sign;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Objects;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,10 +15,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import auth.login.token.CustomUserDetails;
+import auth.sign.token.CustomUserDetails;
+import domain.user.UserCreateRequestDto;
+import domain.user.UserService;
+import global.annotation.ValidEmail;
+import global.annotation.ValidPassword;
 import global.exception.IllegalJwtException;
+import global.util.ApiResponse;
 import jakarta.annotation.security.PermitAll;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,13 +34,14 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/public/sign")
-public class LoginController {
+public class SignController {
 
-  private final LoginService loginService;
+  private final UserService userService;
+  private final SigninService loginService;
 
   @PermitAll
   @PostMapping("/in/local")
-  public ResponseEntity<?> loginLocal(@Valid @RequestBody LoginRequestDto loginRequestDto,
+  public ResponseEntity<?> loginLocal(@Valid @RequestBody SigninRequestDto loginRequestDto,
                                       HttpServletRequest request) {
     
     String clientIp = (String) request.getAttribute("clientIp");
@@ -120,6 +129,38 @@ public class LoginController {
 
     return ResponseEntity.ok().build();
   }
+  
+  @PermitAll
+  @PostMapping("/up/first")
+  public ResponseEntity<ApiResponse<String>> signup1(
+      @RequestHeader("X-Verification-Email-Token") String verificationEmailToken,
+      @ValidEmail @RequestParam("email") String email,
+      @ValidPassword @RequestParam("password") String password,
+      @ValidPassword @RequestParam("confirmPassword") String confirmPassword      
+      ) {
+    if(!Objects.equals(password, confirmPassword)) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.of(400, "비밀번호 불일치.", null));
+    }
+    //이메일 인증 완료 이후 5분 지난 요청 401반환
+    //입력한 이메일과 이메일인증한 이메일과 다른경우 401반환
+    //이미 가입되어있는 이메일 409반환
+    String joinToken = userService.createJoinToken(email, password, verificationEmailToken);
+
+    return ResponseEntity.ok(ApiResponse.of(200, "회원가입 1차 성공", joinToken));
+  }
+    
+  @PermitAll
+  @PostMapping("/up/second")
+  public ResponseEntity<ApiResponse<String>> signup2(
+      @RequestHeader("X-Access-Join-Token") String accessJoinToken,
+      @RequestHeader("X-Verification-Phone-Token") String verificationPhoneToken,
+      @RequestBody @Valid UserCreateRequestDto userCreateRequestDto) {
+  
+    String name = userService.joinLocalUser(userCreateRequestDto, accessJoinToken, verificationPhoneToken);
+    
+    return ResponseEntity.ok(ApiResponse.of(200, "회원 가입 성공.", name));
+  }
+  
 
 }
   

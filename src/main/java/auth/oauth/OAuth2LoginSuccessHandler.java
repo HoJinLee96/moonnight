@@ -15,11 +15,11 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import auth.crypto.JwtTokenProvider;
-import auth.login.log.LoginLog;
-import auth.login.log.LoginLogRepository;
-import auth.login.log.LoginLog.LoginResult;
 import auth.oauth.OAuth.OAuthProvider;
 import auth.oauth.OAuth.OAuthStatus;
+import auth.sign.log.LoginLog;
+import auth.sign.log.LoginLogRepository;
+import auth.sign.log.LoginLog.LoginResult;
 import domain.user.User;
 import domain.user.User.UserProvider;
 import domain.user.User.UserStatus;

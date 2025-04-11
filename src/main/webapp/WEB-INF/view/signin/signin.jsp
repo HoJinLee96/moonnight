@@ -229,7 +229,7 @@ cursor: pointer;
 
 	<div class ="loginform">
 	    <h2 class = "title">로그인</h2>
-		<form action="" id="loginForm">
+		<form onsubmit="signin(event)" id="loginForm">
 			<div class = "emailDiv">
 		        <label for="email">이메일</label>
 		        <input type="email" id=email name="email" required autofocus placeholder="example@example.com">
@@ -323,7 +323,7 @@ function buttonDisplay(input,button){
 
 <!-- 로그인 -->
 <script type="text/javascript">
-$(document).ready(function() {
+/* $(document).ready(function() {
     $('#loginForm').on('submit', function(event) {
         event.preventDefault();
         var email = $('#email').val();
@@ -363,7 +363,7 @@ $(document).ready(function() {
         };
         xhr.send(data);
     });
-});
+}); */
     
 </script>
 
@@ -395,7 +395,7 @@ function openFindWindow(url) {
 }
 
 document.getElementById('joinButton').addEventListener('click',function(){
-	window.location.href="/join";
+	window.location.href="/signup1";
 });
 </script>
 

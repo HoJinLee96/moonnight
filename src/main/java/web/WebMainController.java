@@ -9,6 +9,11 @@ import jakarta.servlet.http.HttpSession;
 @Controller
 public class WebMainController {
   
+
+  @GetMapping("/swagger-ui/")
+  public String redirectToSwagger() {
+      return "forward:/swagger-ui/index.html";
+  }
   
   @GetMapping({"/", "/home"})
   public String showHome(HttpServletRequest req, HttpServletResponse res) {
@@ -71,13 +76,13 @@ public class WebMainController {
     return "my/my";
   }
 
-  @GetMapping("/signup")
+  @GetMapping("/signup1")
   public String showJoin(HttpServletRequest req, HttpServletResponse res) {
     System.out.println("----------WebMainController.showJoin() 실행----------");
-    return "signup/signup";
+    return "signup/signup1";
   }
 
-   @GetMapping("/joinDetail")
+   @GetMapping("/signup2")
    public String showJoin2(HttpServletRequest req, HttpServletResponse res) {
    System.out.println("----------WebMainController.joinDetail() 실행----------");
 //   HttpSession session = req.getSession();
@@ -85,7 +90,7 @@ public class WebMainController {
 //   if (registerUserDto == null) {
 //   return "redirect:/join";
 //   }
-   return "signup/joinDetail";
+   return "signup/signup2";
    }
    
    @GetMapping("/estimate")

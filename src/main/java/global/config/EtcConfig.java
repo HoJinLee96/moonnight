@@ -35,5 +35,17 @@ public class EtcConfig {
       return messageSource;
   }
   
+//  @Configuration
+//  public class SpringDocConfig {
+//      
+//      @Bean
+//      public OpenAPI openAPI() {
+//          return new OpenAPI()
+//              .info(new Info()
+//                  .title("Your API Title")
+//                  .description("API 설명")
+//                  .version("v1.0"));
+//      }
+//  }
 
 }

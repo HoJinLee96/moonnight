@@ -2,6 +2,7 @@ package auth.verification;
 
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import auth.crypto.JwtTokenProvider;
 import auth.redis.TokenStore;
 import auth.verification.Verification.VerificationBuilder;
+import global.exception.VerificationTimeoutException;
 import infra.naver.mail.MailRecipientPayload;
 import infra.naver.mail.NaverMailClient;
 import infra.naver.mail.NaverMailPayload;
@@ -61,7 +63,7 @@ public class VerificationService {
     
     VerificationBuilder verificationBuilder = Verification.builder()
     .requestIp(requestIp)
-    .to(recipientPhone)
+    .recipient(recipientPhone)
     .verificationCode(verificationCode);
 
     try {
@@ -117,7 +119,7 @@ public class VerificationService {
     
     VerificationBuilder verificationBuilder = Verification.builder()
     .requestIp(requestIp)
-    .to(recipientEmail)
+    .recipient(recipientEmail)
     .verificationCode(verificationCode);
 
     try {
@@ -164,18 +166,19 @@ public class VerificationService {
   
   private Verification compareCode(String to, String reqCode, String requestIp) throws TimeoutException {
     // ======= 수신자에 일치하는 DB 찾기 =======
-    Verification verification = verificationRepository.findTopByToOrderByCreatedAtDesc(to)
+    Verification verification = verificationRepository.findTopByRecipientOrderByCreatedAtDesc(to)
         .orElseThrow(() -> {
           logger.info("인증 비교 실패 : 존재하지 않는 인증을 인증 요청함. to: {}, reqCode: {}, requestIp: {}",to, reqCode, requestIp);
-          return new IllegalArgumentException("존재하지 않는 인증을 인증 요청함");
+          return new NoSuchElementException("존재하지 않는 인증을 인증 요청함");
           });
     
-    // ======= 해당 데이터가 5분 이내인지 여부 확인 =======
-    boolean withinTimeResult = verificationRepository.isWithinVerificationTime(verification.getVerificationSeq());
+    // ======= 해당 데이터가 3분 이내인지 여부 확인 =======
+    boolean withinTimeResult = verificationRepository.isWithinVerificationTime(verification.getVerificationSeq()) == 1L;
+    System.out.println("인증시퀀스키값: "+ verification.getVerificationSeq()+", 3분이내 시퀀스인지 조회 결과: "+withinTimeResult);
     if (!withinTimeResult) {
       verification.setVerify(false);
       verificationRepository.flush();
-      throw new TimeoutException("인증 시간이 초과 되었습니다.");
+      throw new VerificationTimeoutException("인증 시간이 초과 되었습니다.");
     }
     
     // ======= 인증번호 일치 결과 =======

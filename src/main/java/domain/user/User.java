@@ -22,7 +22,7 @@ import lombok.Setter;
 // `user_seq` INT AUTO_INCREMENT PRIMARY KEY,
 // `user_provider` ENUM ("LOCAL", "NAVER", "KAKAO") NOT NULL,
 // `email` VARCHAR(50) NOT NULL,
-// `password` VARCHAR(100),
+// `password` VARCHAR(60),
 // `name` VARCHAR(20) ,
 // `birth` VARCHAR(10) ,
 // `phone` VARCHAR(15) ,
@@ -52,7 +52,7 @@ public class User {
   @Column(name = "email", length=50, nullable=false)
   private String email;
   
-  @Column(name = "password", length=100)
+  @Column(name = "password", length=60)
   private String password;
   
   @Column(name = "name", length=20)

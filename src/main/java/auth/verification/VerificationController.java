@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import auth.redis.RateLimiterStore;
 import global.annotation.ValidEmail;
@@ -59,7 +60,7 @@ public class VerificationController {
   public ResponseEntity<ApiResponse<Map<String,String>>> compareEmailVerification(
       @Valid @RequestBody VerificationEmailRequestDto verificationEmailRequestDto,
       HttpServletRequest request) throws TimeoutException{
-    
+    System.out.println(verificationEmailRequestDto.toString());
     String clientIp = (String) request.getAttribute("clientIp");
     rateLimiter.isAllowedByIp(clientIp);
 
@@ -73,7 +74,7 @@ public class VerificationController {
   
   @PostMapping("/sms")
   public ResponseEntity<ApiResponse<Void>> verifyToSms(
-      @RequestBody @ValidPhone String phone,
+      @RequestParam("phone") @ValidPhone String phone,
       HttpServletRequest request) {
     
     String clientIp = (String) request.getAttribute("clientIp");
@@ -87,7 +88,7 @@ public class VerificationController {
 
   @PostMapping("/email")
   public ResponseEntity<ApiResponse<Void>> verifyToEmail(
-      @RequestBody @ValidEmail String email,
+      @RequestParam("email") @ValidEmail String email,
       HttpServletRequest request) {
     
     String clientIp = (String) request.getAttribute("clientIp");

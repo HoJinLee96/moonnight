@@ -3,13 +3,14 @@ package domain.user;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import auth.login.log.LoginLogService;
 import auth.redis.TokenStore;
 import auth.redis.TokenStore.TokenType;
+import auth.sign.log.LoginLogService;
 import domain.address.Address;
 import domain.address.AddressRepository;
 import domain.user.User.UserProvider;
@@ -221,15 +222,21 @@ public class UserService {
   }
 
   public void isEmailExists(UserProvider userProvider, String email) {
-    userRepository.findByUserProviderAndEmail(UserProvider.LOCAL, email)
-    .filter(e->e.getUserStatus()!=UserStatus.DELETE)
-    .orElseThrow(()->new DuplicationException("해당 이메일의 계정이 이미 존재합니다."));
+    logger.info("이메일 중복 검사 userProvider: {}, email: {}", userProvider, email);
+    Optional<User> user = userRepository.findByUserProviderAndEmail(userProvider, email)
+    .filter(e->e.getUserStatus()!=UserStatus.DELETE);
+    
+    if (user.isPresent()) {
+      throw new DuplicationException("해당 이메일의 계정이 이미 존재합니다.");
+    }
   }
 
   public void isPhoneExists(UserProvider userProvider, String phone) {
-    userRepository.findByUserProviderAndPhone(UserProvider.LOCAL, phone)
-    .filter(e->e.getUserStatus()!=UserStatus.DELETE)
-    .orElseThrow(()->new DuplicationException("잘못된 요청입니다. 해당 휴대폰의 계정이 이미 존재합니다."));
+    Optional<User> user = userRepository.findByUserProviderAndPhone(userProvider, phone)
+    .filter(e->e.getUserStatus()!=UserStatus.DELETE);
+    if (user.isPresent()) {
+      throw new DuplicationException("잘못된 요청입니다. 해당 휴대폰의 계정이 이미 존재합니다.");
+    }
   }
   
   private User getUser(UserProvider userProvider, String email) {

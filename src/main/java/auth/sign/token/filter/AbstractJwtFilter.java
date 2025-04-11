@@ -1,4 +1,4 @@
-package auth.login.token.filter;
+package auth.sign.token.filter;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -13,9 +13,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.filter.OncePerRequestFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import auth.crypto.JwtTokenProvider;
-import auth.login.log.LoginLog.LoginResult;
-import auth.login.log.LoginLogService;
 import auth.redis.TokenStore;
+import auth.sign.log.LoginLogService;
+import auth.sign.log.LoginLog.LoginResult;
 import domain.user.User.UserProvider;
 import global.exception.ExpiredException;
 import infra.naver.sms.GuidanceService;
