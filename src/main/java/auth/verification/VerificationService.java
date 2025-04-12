@@ -129,6 +129,7 @@ public class VerificationService {
         logger.info("인증번호 발송 실패: sendStatus: {}, phone: {} , ip: {}", sendStatus, recipientEmail, requestIp);
       }
     } catch (Exception e) {
+      System.out.println("익셉션 발생.");
       verificationBuilder.sendStatus(500);
       e.printStackTrace();
       logger.error("인증번호 발송 실패: phone: {} , ip: {}", recipientEmail, requestIp);
