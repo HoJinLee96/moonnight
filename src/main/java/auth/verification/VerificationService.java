@@ -84,7 +84,7 @@ public class VerificationService {
   
   @Transactional
   public void sendEmailVerificationCode(String recipientEmail, String requestIp) {
-    
+    System.out.println("메일 발송 서비스 시작.");
     String verificationCode = generateVerificationCode();
     String body = "인증번호 [" + verificationCode + "]를 입력해주세요.";
     
@@ -126,6 +126,7 @@ public class VerificationService {
       int sendStatus = naverMailClient.sendVerificationCode(naverMailPayload);
       verificationBuilder.sendStatus(sendStatus);
       if((sendStatus/100)!=2) {
+        System.out.println("인증번호 발송 실패 (sendStatus/100)!=2: "+(sendStatus/100));
         logger.info("인증번호 발송 실패: sendStatus: {}, phone: {} , ip: {}", sendStatus, recipientEmail, requestIp);
       }
     } catch (Exception e) {
@@ -135,6 +136,7 @@ public class VerificationService {
       logger.error("인증번호 발송 실패: phone: {} , ip: {}", recipientEmail, requestIp);
       throw new IllegalStateException("인증번호 발송 실패. 나중에 다시 시도해주세요.");
     }finally {
+      System.out.println("발송된 인증 DB verification 저장");
       verificationRepository.save(verificationBuilder.build());
     }
   }
@@ -142,7 +144,7 @@ public class VerificationService {
   @Transactional
   public String compareSmsForJwt(String phone, String reqCode, String requestIp) throws TimeoutException {
     Verification verification = compareCode(phone, reqCode, requestIp);
-    return jwtTokenProvider.createVerifyPhoneToken(verification.getVerificationSeq(), List.of("RULES_GUEST"), Map.of("phone",phone));
+    return jwtTokenProvider.createVerifyPhoneToken(verification.getVerificationSeq(), List.of("RULES_GUEST"),Map.of("phone",phone));
   }
   
   @Transactional

@@ -34,6 +34,8 @@ public class NaverMailClient {
 
   public int sendVerificationCode(NaverMailPayload naverMailPayload)
           throws InvalidKeyException, UnsupportedEncodingException, NoSuchAlgorithmException, URISyntaxException, JsonProcessingException {
+      
+    System.out.println("네이버 메일 api 요청");
 
       String time = Long.toString(System.currentTimeMillis());
 
@@ -49,6 +51,8 @@ public class NaverMailClient {
       HttpEntity<NaverMailPayload> entity = new HttpEntity<>(naverMailPayload, headers);
       ResponseEntity<String> response = restTemplate.exchange(new URI(mailApiUrl + mailEndpoint + sendMailUri),
               HttpMethod.POST, entity, String.class);
+      
+    System.out.println("네이버 메일 api 요청결과: "+ response.getStatusCode().value());
 
       return response.getStatusCode().value();
   }
