@@ -39,7 +39,7 @@ public class JwtTokenProvider {
   
   private final long expiration14Days = 1000 * 60 * 60 * 24 * 14; // 14
   private final long expiration1Hour = 1000 * 60 * 60; // 1시간
-  private final long expiration10Minute = 1000 * 60 * 10; // 10분
+  private final long expiration30Minute = 1000 * 60 * 30; // 30분
   
   public Map<String,String> createLoginToken(int userId, List<String> roles, Map<String, Object> claims) {
     String accessToken = createAccessToken(userId, roles, claims);
@@ -77,12 +77,12 @@ public class JwtTokenProvider {
         .compact();
   }
   
-  public String createVerifyPhoneToken(int verificationId, List<String> roles, Map<String, Object> claims) {
+  public String createVerifyPhoneToken(int verificationId, Map<String, Object> claims) {
 
     JwtBuilder builder = Jwts.builder()
         .setSubject(aesUtil.encrypt(verificationId+"")) 
         .setIssuedAt(new Date())
-        .setExpiration(new Date(System.currentTimeMillis() + expiration10Minute))
+        .setExpiration(new Date(System.currentTimeMillis() + expiration30Minute))
         .signWith(verifyPhoneHmacShaKey, SignatureAlgorithm.HS256);
     
     if (claims != null) {
@@ -96,12 +96,12 @@ public class JwtTokenProvider {
       }
     }
     
-    builder.claim("roles",roles);
+    builder.claim("roles",List.of("RULE_AUTH"));
     
     return builder.compact();
   }
   
-  public Map<String, Object> validateLoginToken(String token) {
+  public Map<String, Object> validateAccessToken(String token) {
     try {
       Claims claims = Jwts.parserBuilder()
           .setSigningKey(loginHmacShaKey)
@@ -111,8 +111,13 @@ public class JwtTokenProvider {
 
       return getDecryptedClaims(claims);
     } catch (ExpiredJwtException e) {
+      e.printStackTrace();
       throw new ExpiredException("유효기간 만료.");
     } catch (JwtException | IllegalArgumentException e) {
+      e.printStackTrace();
+      throw e;
+    } catch (Exception e) {
+      e.printStackTrace();
       throw e;
     }
   }
@@ -149,10 +154,11 @@ public class JwtTokenProvider {
     Map<String, Object> result = new HashMap<>();
     result.put("subject",aesUtil.decrypt(claims.getSubject()));
     claims.forEach((k, v) -> {
-        if ("roles".equals(k)) {
+      System.out.println("k: "+k+", v: "+v);
+        if (v instanceof String strVal) {
+          result.put(k, aesUtil.decrypt((String)v));
+        } else {
           result.put(k, v);
-        }else {
-        result.put(k, aesUtil.decrypt((String)v));
         }
     });
     return result;

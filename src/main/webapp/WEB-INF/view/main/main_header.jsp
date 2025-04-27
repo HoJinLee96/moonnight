@@ -76,7 +76,7 @@ body{
 	padding: 0px;
 
 }
-.top_nav ul li a{
+.top_nav ul li a, #user-welcome{
 	text-decoration: none;
 	color: white;
 	padding-left: 10px;
@@ -119,39 +119,54 @@ padding-left: 20px;
 min-height: 1080px;
 }
 </style>
-</head>
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const accessToken = sessionStorage.getItem("accessToken");
+<script type="module">
+  import {
+	confirmAccessToken,
+	signOut
+  } from '/static/js/sign.js';
 
-  if (accessToken) {
-    // 로그인 상태
-    document.getElementById("login-header").style.display = "none";
-    document.getElementById("user-header").style.display = "flex";
+	document.addEventListener('DOMContentLoaded', function() {
+		confirmAccessToken(
+		(user)=>{
+    		document.getElementById("login-header").style.display = "none";
+    		document.getElementById("user-header").style.display = "flex";
+    		document.getElementById("user-welcome").innerText = user.name+"님 환영합니다!";
+		},
+		(status)=>{
+ 		   	document.getElementById("login-header").style.display = "flex";
+ 		   	document.getElementById("user-header").style.display = "none";
+		}
+		);
+	});
 
-    // 사용자 이름 토큰에서 파싱해서 넣기 (JWT decode 필요)
-    const payload = JSON.parse(atob(accessToken.split('.')[1]));
-    document.getElementById("user-welcome").innerText = `${payload.name}님 환영합니다!`;
-  } else {
-    // 비로그인 상태
-    document.getElementById("login-header").style.display = "flex";
-    document.getElementById("user-header").style.display = "none";
-  }
+document.getElementById("signOut").addEventListener("click", (e)=> {
+	signOut(
+		()=>{
+			localStorage.removeItem("accessToken"); 
+    		location.reload(true);
+		},
+		(status)=>{
+			alert(status);
+		}
+	);
+
 });
 </script>
+</head>
 <div id ="headerContainer">
         <div class="background-image"></div>
 
 	<div class = "top_inner">
 		<nav class = "top_nav">
-			<ul id="login-header" style="display:none">
+			<ul id="login-header">
 				<li><a href="/signin">로그인</a></li>
 				<li><a href="/signup1">회원가입</a></li>
 				<li><a href="">고객센터</a></li>
 			</ul>
 			<ul id="user-header" style="display:none">
+				<li><span id ="user-welcome"></span></li>
 				<li><a href="/my">마이페이지</a></li>
-				<li><a href="/signout">로그아웃</a></li>
+				<li><span id ="signOut">로그아웃</span></li>
 				<li><a href="">고객센터</a></li>
 			</ul>
 			<ul>
@@ -174,4 +189,5 @@ document.addEventListener("DOMContentLoaded", () => {
 	
 	</div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 </html>

@@ -12,16 +12,22 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class LoginLogService {
   
-  LoginLogRepository loginLogRepository;
+  private final LoginLogRepository loginLogRepository;
   
   @Transactional
   public void registerLoginLog(UserProvider userProvider, String email, String ip, LoginResult result) {
-    loginLogRepository.save(LoginLog.builder()
+    System.out.println("userProvider: "+ userProvider+", email: "+email+ ", ip: "+ip+", result: "+result);
+    try {
+    LoginLog loginLog = loginLogRepository.save(LoginLog.builder()
         .userProvider(userProvider)
         .email(email)
         .requestIp(ip)
         .loginResult(result)
         .build());
+    System.out.println(loginLog.toString());
+    }catch (Exception e) {
+      e.printStackTrace();
+    }
   }
   
   // ======= 로그인 실패 횟수 검사 =======

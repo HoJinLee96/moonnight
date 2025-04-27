@@ -31,7 +31,7 @@ public class TokenStore {
     VERIFICATION_PHONE("verification:phone:", Duration.ofMinutes(5)),
     ACCESS_FINDPW("access:findpw:", Duration.ofMinutes(10)),
     ACCESS_PASSWORD("access:password:", Duration.ofMinutes(10)),
-    ACCESS_JOIN("access:join:", Duration.ofMinutes(20)),
+    ACCESS_SIGNUP("access:signup:", Duration.ofMinutes(20)),
     JWT_REFRESH("jwt:refresh:",Duration.ofDays(14));
 
     private final String prefix;
@@ -185,8 +185,8 @@ public class TokenStore {
     return Optional.of(aesProvider.decrypt(value));
   }
   
-  public void removeToken(TokenType type, String key) {
-    redisTemplate.delete(type.getPrefix() + key);
+  public boolean removeToken(TokenType type, String key) {
+    return redisTemplate.delete(type.getPrefix() + key);
   }
 
   public boolean isValid(TokenType type, String key) {

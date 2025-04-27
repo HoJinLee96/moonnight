@@ -1,7 +1,5 @@
 package domain.user;
 
-import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -11,11 +9,10 @@ import org.springframework.stereotype.Service;
 import auth.redis.TokenStore;
 import auth.redis.TokenStore.TokenType;
 import auth.sign.log.LoginLogService;
-import domain.address.Address;
-import domain.address.AddressRepository;
 import domain.user.User.UserProvider;
 import domain.user.User.UserStatus;
 import global.exception.DuplicationException;
+import global.exception.NoSuchDataException;
 import global.exception.StatusDeleteException;
 import global.exception.StatusStayException;
 import global.exception.StatusStopException;
@@ -27,74 +24,79 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
 
   private final UserRepository userRepository;
-  private final AddressRepository addressRepository;
   private final LoginLogService loginLogService;
-  private final TokenStore uuidProvider;
+  private final TokenStore tokenStore;
   private final PasswordEncoder passwordEncoder;
   private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
-  public String createJoinToken(String email, String password, String valificationEmailToken) {
-
-    String emailRedis = uuidProvider.getVerificationEmail(valificationEmailToken);
-    
-    try {
-      validateByReidsValue(email, emailRedis);
-      
-      isEmailExists(UserProvider.LOCAL, email);
-      
-      return uuidProvider.createMapToken(TokenType.ACCESS_JOIN, Map.of("email",email,"password",password));
-    } finally {
-        uuidProvider.removeToken(TokenType.VERIFICATION_EMAIL, valificationEmailToken);
-    }
-  }
-  
-  @Transactional
-  public String joinLocalUser(UserCreateRequestDto userCreateRequestDto, String accessJoinToken, String verificationPhoneToken) {
-    
-    Map<String,String> mapValue = uuidProvider.getMapTokenData(TokenType.ACCESS_JOIN, accessJoinToken);
-    String phoneRedis = uuidProvider.getVerificationPhone(verificationPhoneToken);
-    
-    try {
-      validateByReidsValue(userCreateRequestDto.phone(), phoneRedis);
-      
-      isPhoneExists(UserProvider.LOCAL, phoneRedis);
-      
-      // 비밀번호 인코딩 후 저장
-      String encodePassoword = passwordEncoder.encode(mapValue.get("password"));
-      
-      User user = userCreateRequestDto.toEntity();
-      user.setEmail(mapValue.get("email"));
-      user.setPassword(encodePassoword);
-      userRepository.save(user);
-      
-      Address address = userCreateRequestDto.toAddressEntity();
-      address.setUser(user);
-      addressRepository.save(address);
-      
-      return userCreateRequestDto.name();
-    } finally {
-        uuidProvider.removeToken(TokenType.ACCESS_JOIN, accessJoinToken);
-        uuidProvider.removeToken(TokenType.VERIFICATION_PHONE, verificationPhoneToken);
-    }
-  }
+//  public String createJoinToken(String email, String password, String valificationEmailToken) {
+//
+//    String emailRedis = tokenStore.getVerificationEmail(valificationEmailToken);
+//    
+//    try {
+//      validateByReidsValue(email, emailRedis);
+//      
+//      isEmailExists(UserProvider.LOCAL, email);
+//      
+//      return tokenStore.createMapToken(TokenType.ACCESS_JOIN, Map.of("email",email,"password",password));
+//    } finally {
+//        tokenStore.removeToken(TokenType.VERIFICATION_EMAIL, valificationEmailToken);
+//    }
+//  }
+//  
+//  @Transactional
+//  public String signUpLocalUser(UserCreateRequestDto userCreateRequestDto, String accessJoinToken, String verificationPhoneToken) {
+//    
+//    Map<String,String> mapValue = tokenStore.getMapTokenData(TokenType.ACCESS_JOIN, accessJoinToken);
+//    String phoneRedis = tokenStore.getVerificationPhone(verificationPhoneToken);
+//    
+//    try {
+//      validateByReidsValue(userCreateRequestDto.phone(), phoneRedis);
+//      
+//      isPhoneExists(UserProvider.LOCAL, phoneRedis);
+//      
+//      // 비밀번호 인코딩 후 저장
+//      String encodePassoword = passwordEncoder.encode(mapValue.get("password"));
+//      
+//      User user = userCreateRequestDto.toEntity();
+//      user.setEmail(mapValue.get("email"));
+//      user.setPassword(encodePassoword);
+//      userRepository.save(user);
+//      
+//      Address address = userCreateRequestDto.toAddressEntity();
+//      address.setUser(user);
+//      addressRepository.save(address);
+//      
+//      return userCreateRequestDto.name();
+//    } finally {
+//        tokenStore.removeToken(TokenType.ACCESS_JOIN, accessJoinToken);
+//        tokenStore.removeToken(TokenType.VERIFICATION_PHONE, verificationPhoneToken);
+//    }
+//  }
   
   public User getUserByUserId(int userId) {
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new NoSuchElementException("찾을 수 없는 유저."));
+        .orElseThrow(() -> new NoSuchDataException("찾을 수 없는 유저."));
     validateStatus(user);
     return user;
   }
+  
   public User getUserByUserProviderAndEmail(UserProvider userProvider, String email) {
     User user = userRepository.findByUserProviderAndEmail(userProvider, email)
-        .orElseThrow(() -> new NoSuchElementException("찾을 수 없는 유저입니다."));
+        .orElseThrow(() -> new NoSuchDataException("찾을 수 없는 유저입니다."));
     validateStatus(user);
     return user;
   }
 
+  public User getUserByUserProviderAndPhone(UserProvider userProvider, String phone) {
+    return userRepository.findByUserProviderAndPhone(userProvider, phone)
+      .orElseThrow(() -> new NoSuchDataException("찾을 수 없는 유저."));
+  }
+
   @Transactional
-  public String verifyPhoneForEmail(UserProvider userProvider, String phone, String token) {
+  public User getUserByVerifyPhone(UserProvider userProvider, String phone, String token) {
     
-    String phoneRedis = uuidProvider.getVerificationPhone(token);
+    String phoneRedis = tokenStore.getVerificationPhone(token);
     try {
       validateByReidsValue(phone, phoneRedis);
       
@@ -102,34 +104,32 @@ public class UserService {
       
       validateStatus(user);
       
-      return user.getEmail();
+      return user;
     }finally {
-      uuidProvider.removeToken(TokenType.VERIFICATION_PHONE, token);
+      tokenStore.removeToken(TokenType.VERIFICATION_PHONE, token);
     }
   }
   
-  @Transactional
   public String verifyPhoneAndCreateFindPwToken(UserProvider userProvider, String email, String phone, String token) {
     
-    String phoneRedis = uuidProvider.getVerificationPhone(token);
+    String phoneRedis = tokenStore.getVerificationPhone(token);
     try {
       validateByReidsValue(phone, phoneRedis);
       
       User user = userRepository.findByUserProviderAndEmailAndPhone(userProvider, email, phone)
-          .orElseThrow(() -> new NoSuchElementException("일치하는 계정을 찾을 수 없습니다."));
+          .orElseThrow(() -> new NoSuchDataException("일치하는 계정을 찾을 수 없습니다."));
       
       validateStatus(user);
       
-      return uuidProvider.createAccessFindPwToken(email);
+      return tokenStore.createAccessFindPwToken(email);
     }finally {
-      uuidProvider.removeToken(TokenType.VERIFICATION_PHONE, token);
+      tokenStore.removeToken(TokenType.VERIFICATION_PHONE, token);
     }
   }
   
-  @Transactional
   public String verifyEmailAndCreateFindPwToken(UserProvider userProvider, String email, String token) {
     
-    String emailRedis = uuidProvider.getVerificationEmail(token);
+    String emailRedis = tokenStore.getVerificationEmail(token);
     try {
       validateByReidsValue(email, emailRedis);
       
@@ -137,10 +137,10 @@ public class UserService {
       
       validateStatus(user);
       
-      return uuidProvider.createAccessFindPwToken(email);
+      return tokenStore.createAccessFindPwToken(email);
       
     }finally {
-      uuidProvider.removeToken(TokenType.VERIFICATION_EMAIL, token);
+      tokenStore.removeToken(TokenType.VERIFICATION_EMAIL, token);
     }
   }
   
@@ -156,13 +156,13 @@ public class UserService {
       throw new IllegalArgumentException("비밀번호가 틀립니다.");
     }
     
-    return uuidProvider.createAccessPaaswordToken(email);
+    return tokenStore.createAccessPaaswordToken(email);
   }
   
   @Transactional
   public UserResponseDto updatePasswordByFindPwToken(UserProvider userProvider, String newPassword, String token, String ip) {
   
-    String email = uuidProvider.getAccessFindpwToken(token);
+    String email = tokenStore.getAccessFindpwToken(token);
     
     try {
       
@@ -178,14 +178,14 @@ public class UserService {
         
       return UserResponseDto.fromEntity(userRepository.getReferenceById(user.getUserSeq())); 
     } finally {
-        uuidProvider.removeToken(TokenType.ACCESS_FINDPW , token);
+        tokenStore.removeToken(TokenType.ACCESS_FINDPW , token);
     }
   }
 
   @Transactional
-  public UserResponseDto updatePhoneByVerfication(UserProvider userProvider, String email, String phone, String token) {
+  public UserResponseDto updatePhoneByVerification(UserProvider userProvider, String email, String phone, String token) {
     
-    String phoneRedis = uuidProvider.getVerificationPhone(token);
+    String phoneRedis = tokenStore.getVerificationPhone(token);
     try {
       validateByReidsValue(phone, phoneRedis);
       
@@ -196,17 +196,17 @@ public class UserService {
       user.setPhone(phone);
       userRepository.flush();
       
-      uuidProvider.removeToken(TokenType.VERIFICATION_PHONE, token);
+      tokenStore.removeToken(TokenType.VERIFICATION_PHONE, token);
       return UserResponseDto.fromEntity(userRepository.getReferenceById(user.getUserSeq())); 
       
     } finally {
-      uuidProvider.removeToken(TokenType.ACCESS_FINDPW , token);
+      tokenStore.removeToken(TokenType.ACCESS_FINDPW , token);
     }
   }
 
   @Transactional
   public void deleteUser(UserProvider userProvider, String email, String token) {
-    String emailRedis = uuidProvider.getAccessPasswordToken(token);
+    String emailRedis = tokenStore.getAccessPasswordToken(token);
     try {
       validateByReidsValue(email, emailRedis);
       
@@ -217,12 +217,11 @@ public class UserService {
       user.setUserStatus(UserStatus.DELETE);
       
     } finally {
-      uuidProvider.removeToken(TokenType.ACCESS_PASSWORD, token);
+      tokenStore.removeToken(TokenType.ACCESS_PASSWORD, token);
     }
   }
 
   public void isEmailExists(UserProvider userProvider, String email) {
-    logger.info("이메일 중복 검사 userProvider: {}, email: {}", userProvider, email);
     Optional<User> user = userRepository.findByUserProviderAndEmail(userProvider, email)
     .filter(e->e.getUserStatus()!=UserStatus.DELETE);
     
@@ -235,18 +234,13 @@ public class UserService {
     Optional<User> user = userRepository.findByUserProviderAndPhone(userProvider, phone)
     .filter(e->e.getUserStatus()!=UserStatus.DELETE);
     if (user.isPresent()) {
-      throw new DuplicationException("잘못된 요청입니다. 해당 휴대폰의 계정이 이미 존재합니다.");
+      throw new DuplicationException("해당 휴대폰의 계정이 이미 존재합니다.");
     }
   }
   
   private User getUser(UserProvider userProvider, String email) {
     return userRepository.findByUserProviderAndEmail(userProvider, email)
-        .orElseThrow(() -> new NoSuchElementException("찾을 수 없는 유저."));
-  }
-  
-  protected User getUserByUserProviderAndPhone(UserProvider userProvider, String phone) {
-    return userRepository.findByUserProviderAndPhone(userProvider, phone)
-      .orElseThrow(() -> new NoSuchElementException("찾을 수 없는 유저."));
+        .orElseThrow(() -> new NoSuchDataException("찾을 수 없는 유저."));
   }
   
   @SuppressWarnings("incomplete-switch")

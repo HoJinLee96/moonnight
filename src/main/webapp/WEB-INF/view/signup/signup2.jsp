@@ -47,6 +47,10 @@ input[type="number"] {
 	font-weight: bold;
 }
 
+#step1{
+	position: relative;
+}
+
 #verificationSmsCode, #phone {
 	width: 192px !important;
 }
@@ -61,6 +65,10 @@ input[type="number"] {
 
 #subStep1_1 {
 	margin-right: 50px;
+}
+#subStep1_2 {
+	top: 0px;
+    position: absolute;
 }
 
 #subStep1_1, #subStep1_2 {
@@ -187,46 +195,51 @@ input[type="number"] {
     %> --%>
 			<h2>2 단계 : 정보 입력</h2>
 			<div class="step active" id="step1">
+			
 				<div id="subStep1_1">
 					<label for="name">이름</label>
-					<input type="text" id="name"name="name" maxlength="20" required onblur="formatName()">
+					<input type="text" id="name"name="name" maxlength="20" required>
+					<span id="nameMessage"></span>
 				</div>
-				<div id="subStep1_2">
-					<label for="birth">생년월일</label> <input type="number" id="birth"
-						name="birth" placeholder="19990101" maxlength="8"
-						oninput="if(this.value.length > 8) this.value = this.value.slice(0, 8);"
-						onblur="formatBirth()" required>
-				</div>
-				<span id="nameBirthMessage"></span>
-				<label for="phone">휴대폰</label>
-				<input type="text" id="phone" name="phone" required oninput="formatPhoneNumber(this)" maxlength="13" value="010-">
-				<button class="sendSmsButton" id="sendSmsButton" type="button" onclick="sendSms()">인증번호 발송</button>
 				
-				<span id="sendSmsMessage"></span> <label for="verificationCode">인증번호</label>
-				<div id="input-wrapper">
-					<input type="text" id="verificationSmsCode"
-						name="verificationSmsCode" required oninput="formatCode(this)"
-						maxlength="5" readonly disabled>
-					<div id="verificationTimeMessage"></div>
+				<div id="subStep1_2">
+					<label for="birth">생년월일</label> 
+					<input type="number" id="birth"
+						name="birth" placeholder="19990101" maxlength="8" required>
+					<span id="birthMessage"></span>
 				</div>
-				<input type="hidden" id="smsSeq" value="" />
-				<button class="verifySmsCodeButton" id="verifySmsCodeButton"
-					type="button" onclick="verifySmsCode()" disabled>인증번호 확인</button>
-				<span id="verificationSmsMessage"></span> <label for="mainAddress">주소</label>
+				
+				<label for="phone">휴대폰 번호</label>
+				<input type="text" id="phone" name="phone" required maxlength="13" value="010-">
+				<button class="sendSmsButton" id="sendSmsButton" type="button">인증번호 발송</button>
+				<span id="phoneMessage"></span> 
+				
+				<label for="verificationCode">인증번호</label>
+				<div id="input-wrapper">
+					<input type="number" id="verificationSmsCode" name="verificationSmsCode" required maxlength="6" readonly disabled>
+				<div id="verificationTimeMessage"></div>
+				</div>
+				<button class="verifySmsCodeButton" id="verifySmsCodeButton" type="button" disabled>인증번호 확인</button>
+				<span id="verificationSmsMessage"></span>
+				
+				<label for="mainAddress">주소</label>
 				<input type="text" id="postcode" name="postcode"
-					onclick="searchAddress()" placeholder="우편번호"> <input
+					onclick="searchAddress()" placeholder="우편번호"> 
+					<input
 					type="text" id="mainAddress" name="mainAddress"
 					onclick="searchAddress()" placeholder="주소"> <input
 					type="text" id="detailAddress" name="detailAddress"
-					autocomplete="off" required placeholder="상세주소"> <span
-					id="addressMessage"></span> <input type="checkbox"
-					id="marketingReceivedStatus" name="marketingReceivedStatus">
-				<label for="marketingReceivedStatus">마케팅 정보 사용 동의 (선택)</label> <br>
-				<input type="checkbox" id="agreeToTerms" name="agreeToTerms"
-					required> <label for="agreeToTerms">개인정보 저장 동의 (필수)</label>
+					autocomplete="off" required placeholder="상세주소"> 
+				<span id="addressMessage"></span> 
+				
+				<input type="checkbox" id="agreeToTerms" name="agreeToTerms" required> 
+				<label for="agreeToTerms">개인정보 저장 동의 (필수)</label> <br>
+				<input type="checkbox" id="marketingReceivedStatus" name="marketingReceivedStatus">
+				<label for="marketingReceivedStatus">마케팅 정보 사용 동의 (선택)</label> 
 			</div>
+			
 			<div id="buttonContainer">
-				<button type="submit" id="submitButton">저장하기</button>
+				<button type="button" id="submitButton">회원가입</button>
 			</div>
 		</form>
 
@@ -234,12 +247,187 @@ input[type="number"] {
 
 	<%@ include file="/WEB-INF/view/main/main_footer.jsp"%>
 </body>
-
 <!-- 주소 검색 api -->
-<script
-	src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script src="/static/js/daumAddressSearch4.js"></script>
 
+<script type="module">
+import {
+	validatePhone,
+	sendSms,
+	verifySmsCode,
+	startVerificationTimer
+} from '/static/js/smsVerification.js';
+
+document.getElementById("sendSmsButton").addEventListener("click", () => {
+	var reqPhone = document.getElementById("phone").value;
+	var message = document.getElementById("phoneMessage");
+
+    validatePhone(
+		reqPhone,
+		() => {
+        	sendSms(
+			reqPhone,
+          	() => {
+				alert("인증번호 발송 완료");
+				message.style.color = 'green';
+				message.innerText = "인증번호 발송 완료";
+				document.getElementById("phone").setAttribute("readonly",true);
+				document.getElementById("phone").setAttribute("disabled",true);
+				document.getElementById("sendSmsButton").innerText = "인증번호 재발송";
+				document.getElementById("verificationSmsCode").removeAttribute("readonly");
+				document.getElementById("verificationSmsCode").removeAttribute("disabled");
+				document.getElementById("verifySmsCodeButton").removeAttribute("disabled");
+            startVerificationTimer(() => {
+              document.getElementById("verificationMailMessage").innerText = "시간 초과. 다시 인증해주세요.";
+            });
+          },
+          (status) => {
+            const msg = status === 429 ? "잠시 후 다시 시도해주세요." : "서버 오류 발생";
+            document.getElementById("emailMessage").innerText = msg;
+          }
+        );
+      },
+      (status) => {
+		let msg;
+		if(status === 404){
+			msg = "휴대폰 번호를 확인해 주세요.";
+		}else if(status === 409){
+			msg = "이미 가입된 휴대폰 번호 입니다.";
+		}else{
+			msg = "서버 오류 발생";
+		}
+		message.style.color = 'red';
+		message.innerText = msg;
+	  }
+    );
+  });
+
+document.getElementById("verifySmsCodeButton").addEventListener("click", () => {
+
+	var message = document.getElementById("verificationSmsMessage");
+	var phone = document.getElementById("phone").value;
+	var code = document.getElementById("verificationSmsCode").value;
+
+	verifySmsCode(phone,code,
+	(json)=>{
+		alert("인증 성공");
+		message.style.color = 'green';
+	    message.innerText = "인증 성공";
+	    document.getElementById("phone").setAttribute("readonly",true);
+		document.getElementById("phone").setAttribute("disabled",true);
+		document.getElementById("sendSmsButton").setAttribute("disabled", true);
+		document.getElementById("verificationSmsCode").setAttribute("readonly", true);
+		document.getElementById("verificationSmsCode").setAttribute("disabled", true);
+		document.getElementById("verifySmsCodeButton").setAttribute("disabled", true);
+	},
+	(status)=>{
+		let msg;
+		if(status === 400){
+			msg = "인증 번호를 확인해 주세요.";
+		}
+		else if(status === 401){
+			msg = "인증 번호가 일치하지 않습니다.";
+		}
+		else if(status === 408){
+			msg = "시간 초과. 다시 인증해주세요.";
+		}else if(status === 404){
+			msg = "잘못된 요청입니다.";
+		}else{
+			msg = "서버 오류 발생";
+		}
+		message.style.color = 'red';
+		message.innerText = msg;
+	});
+});
+</script>
+
+<script type="module">
+  import {
+	formatName,
+	formatBirth,
+	formatPhoneNumber,
+	formatVerifyCode,
+
+  } from '/static/js/format.js';
+
+document.getElementById("name").addEventListener("input", (e)=> {
+	var message = document.getElementById("nameMessage");
+	formatName(e.target.value,message);
+});
+
+document.getElementById("birth").addEventListener("input", (e)=> {
+	var message = document.getElementById("birthMessage");
+	if(e.target.value.length===8){
+		formatBirth(e.target,message);
+	}
+	formatBirth(e.target);
+});
+document.getElementById("birth").addEventListener("blur", (e)=> {
+	var message = document.getElementById("birthMessage");
+	formatBirth(e.target,message);
+});
+
+document.getElementById("phone").addEventListener("input", (e)=> {
+	if(e.target.value.length>=13){
+		var message = document.getElementById("phoneMessage");
+		formatPhoneNumber(e.target,message);
+	}
+	formatPhoneNumber(e.target);
+});
+document.getElementById("phone").addEventListener("focus", (e)=> {
+	formatPhoneNumber(e.target);
+});
+document.getElementById("phone").addEventListener("blur", (e)=> {
+	var message = document.getElementById("phoneMessage");
+	formatPhoneNumber(e.target,message);
+});
+
+document.getElementById("verificationSmsCode").addEventListener("input", (e)=> {
+	formatVerifyCode(e.target);
+});
+
+</script>
+
+<script type="module">
+  import {
+	signUpStep2
+  } from '/static/js/sign.js';
+
+document.getElementById("submitButton").addEventListener("click", (e)=> {
+	e.preventDefault();
+	const name = document.getElementById("name").value;
+	const birthInput = document.getElementById("birth");
+	const phoneInput = document.getElementById("phone");
+	const postcode = document.getElementById("postcode").value;
+	const mainAddress = document.getElementById("mainAddress").value;
+	const detailAddress = document.getElementById("detailAddress").value;
+	const agreeToTerms = document.getElementById("agreeToTerms").checked;
+	const marketingReceivedStatus = document.getElementById("marketingReceivedStatus").checked;
+
+	signUpStep2(name,birthInput,phoneInput,postcode,mainAddress,detailAddress,agreeToTerms,marketingReceivedStatus,
+	(json)=>{
+		alert(json.data+"님 환영합니다!");
+		location.replace("/signin");
+	},
+	(error)=>{
+		if (error.type === "VALIDATION") {
+	    	alert(error.message);
+	  	} else if (error.type === "SERVER") {
+			if(error.status === 401){
+	    	alert("잘못된 요청입니다.");
+			} else if(error.status === 409){
+	    	alert("이미 가입되어 있는 이메일 입니다.");
+			}  else if(error.status === 500){
+	    	alert("서버 오류. 잠시후 다시 시도해 주세요.");
+			}else{
+	    	alert("회원가입 실패.\n서버 오류 코드: " + error.status + "\n내용: "+error.message);
+			}
+		}
+	});
+});
+
+</script>
 
 
 </html>

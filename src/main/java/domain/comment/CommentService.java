@@ -36,7 +36,7 @@ public class CommentService {
     
     Comment comment = commentRequestDto.toEntity(user, estimate);
     
-    return CommentResponseDto.fromEntity(commentRepository.save(comment), user.getUserSeq(), obfuscator);
+    return CommentResponseDto.fromEntity(commentRequestDto.estimateId(), commentRepository.save(comment), user.getUserSeq(), obfuscator);
   }
 
   public List<CommentResponseDto> getCommentList(int estimateId, int userId) {
@@ -47,12 +47,12 @@ public class CommentService {
     
     return comments.stream()
         .filter(e->e.getCommentStatus()!=CommentStatus.DELETE)
-        .map(comment -> CommentResponseDto.fromEntity(comment, user.getUserSeq(), obfuscator))
+        .map(comment -> CommentResponseDto.fromEntity(estimateId, comment, user.getUserSeq(), obfuscator))
         .collect(Collectors.toList());
   }
 
   @Transactional
-  public CommentResponseDto updateComment(UserProvider userProvider, String email, int commentId, String newText) {
+  public CommentResponseDto updateComment(UserProvider userProvider, String email, int estimateId, int commentId, String newText) {
     
     User user = userService.getUserByUserProviderAndEmail(userProvider, email);
     
@@ -62,7 +62,7 @@ public class CommentService {
     
     Comment updatedComment = commentRepository.getReferenceById(comment.getCommentSeq());
 
-    return CommentResponseDto.fromEntity(updatedComment,user.getUserSeq(),obfuscator);
+    return CommentResponseDto.fromEntity(estimateId, updatedComment, user.getUserSeq(), obfuscator);
   }
 
   @Transactional

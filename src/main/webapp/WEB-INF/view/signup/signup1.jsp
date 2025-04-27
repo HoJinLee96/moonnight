@@ -151,10 +151,10 @@ margin-bottom: 50px;
 </body>
 <script type="module">
   import {
-    sendMail,
     validateEmail,
-    startVerificationTimer,
-	verifyMailCode
+    sendMail,
+	verifyMailCode,
+    startVerificationTimer
   } from '/static/js/emailVerification.js';
 
 document.getElementById("sendMailButton").addEventListener("click", () => {
@@ -171,11 +171,9 @@ document.getElementById("sendMailButton").addEventListener("click", () => {
 				message.style.color = 'green';
 				message.innerText = "인증번호 발송 완료";
 				verMessage.innerText = "";
-				console.log("인증번호 발송 완료");
 				document.getElementById("userEmail").setAttribute("readonly",true);
 				document.getElementById("userEmail").setAttribute("disabled",true);
 				document.getElementById("sendMailButton").innerText = "인증번호 재발송";
-				document.getElementById("sendMailButton").setAttribute("onclick", "sendMail()");
 				document.getElementById("verificationMailCode").removeAttribute("readonly");
 				document.getElementById("verificationMailCode").removeAttribute("disabled");
 				document.getElementById("verifyMailCodeButton").removeAttribute("disabled");
@@ -208,7 +206,8 @@ document.getElementById("sendMailButton").addEventListener("click", () => {
 document.getElementById("verifyMailCodeButton").addEventListener("click", () => {
 	var message = document.getElementById("verificationMailMessage");
 
-	verifyMailCode(() => {
+	verifyMailCode(
+	(json) => {
 		alert("인증 성공");
 		message.style.color = 'green';
 	    message.innerText = "인증 성공";
@@ -221,9 +220,13 @@ document.getElementById("verifyMailCodeButton").addEventListener("click", () => 
 		document.getElementById("step3").style.display = "block";
 	},
 	(status) =>{
+
 		let msg;
 		if(status === 400){
 			msg = "인증 번호를 확인해 주세요.";
+		}
+		else if(status === 401){
+			msg = "인증 번호가 일치하지 않습니다.";
 		}
 		else if(status === 408){
 			msg = "시간 초과. 다시 인증해주세요.";
@@ -239,20 +242,19 @@ document.getElementById("verifyMailCodeButton").addEventListener("click", () => 
 </script>
 <script type="module">
 import {
-  sendJoinStep1Request
-} from '/static/js/signup.js';
+  signUpStep1
+} from '/static/js/sign.js';
 
 	document.getElementById("submitButton").addEventListener("click", (e) => {
 	e.preventDefault();
 	const email = document.getElementById("userEmail").value;
 	const password = document.getElementById("userPassword").value;
 	const confirmPassword = document.getElementById("userConfirmPassword").value;
-	sendJoinStep1Request(
+	signUpStep1(
 	    email,
 	    password,
 		confirmPassword,
 		(json)=>{
-			localStorage.setItem("accessJoinToken", json.data);
 			location.replace("/signup2");
 		},
 		(error)=>{
@@ -276,7 +278,7 @@ import {
 <script type="module">
   import {
     formatEmail,
-	formaVerifyCode,
+	formatVerifyCode,
 	formatPasswords,
 	validateConfirmPasswords
   } from '/static/js/format.js';
@@ -287,7 +289,7 @@ document.getElementById("userEmail").addEventListener("input", (e)=> {
 });
 
 document.getElementById("verificationMailCode").addEventListener("input", (e)=> {
-	formaVerifyCode(e);
+	formatVerifyCode(e.target);
 });
 
 document.getElementById("userPassword").addEventListener("input", (e)=> {
@@ -298,8 +300,10 @@ document.getElementById("userPassword").addEventListener("input", (e)=> {
 
 document.getElementById("userConfirmPassword").addEventListener("input", (e)=> {
 	var password = document.getElementById("userPassword").value;
-	var message = document.getElementById("passwordConfirmMessage");
-	validateConfirmPasswords(password, e.target.value, message);
+	var confirmMessage = document.getElementById("passwordConfirmMessage");
+	if(formatPasswords(password)){
+		validateConfirmPasswords(password, e.target.value, confirmMessage);
+	}
 });
 
 </script>

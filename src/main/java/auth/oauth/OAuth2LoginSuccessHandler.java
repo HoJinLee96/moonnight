@@ -11,15 +11,18 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
+import org.springframework.security.web.DefaultRedirectStrategy;
+import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import auth.crypto.JwtTokenProvider;
 import auth.oauth.OAuth.OAuthProvider;
 import auth.oauth.OAuth.OAuthStatus;
 import auth.sign.log.LoginLog;
-import auth.sign.log.LoginLogRepository;
 import auth.sign.log.LoginLog.LoginResult;
+import auth.sign.log.LoginLogRepository;
 import domain.user.User;
 import domain.user.User.UserProvider;
 import domain.user.User.UserStatus;
@@ -30,7 +33,9 @@ import global.exception.StatusStopException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
@@ -39,13 +44,15 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     private final OAuthRepository oauthRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final LoginLogRepository loginLogRepository;
+    private final RedirectStrategy redirectStrategy = new DefaultRedirectStrategy(); // 추가
+
     private final RedisTemplate<String, String> redisTemplate;
 
 
     @SuppressWarnings("incomplete-switch")
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
-      
+      try {
         DefaultOAuth2User oAuth2User = (DefaultOAuth2User) authentication.getPrincipal();
         
         String provider = extractProvider(authentication).toUpperCase(); // registrationId 추출
@@ -88,8 +95,10 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             // user 저장
             user = User.builder()
                     .email(email)
+                    .name(name)
                     .userProvider(UserProvider.valueOf(provider))
                     .userStatus(UserStatus.ACTIVE)
+                    .marketingReceivedStatus(false)
                     .build();
             userRepository.save(user);
 
@@ -118,8 +127,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         saveLoginLog(email, UserProvider.valueOf(provider), clientIp, LoginResult.SUCCESS);
         
         // User-Agent 분기
-        String userAgent = request.getHeader("User-Agent");
-        boolean isMobileApp = userAgent != null && userAgent.contains("MyMobileApp");
+        String userAgent = request.getHeader("X-Client-Type");
+        boolean isMobileApp = userAgent != null && userAgent.contains("mobile");
 
         if (isMobileApp) {
             // 앱용 응답: JSON body로 토큰 전달
@@ -129,19 +138,61 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 "refreshToken", refreshToken
             )));
         } else {
-            // 웹용 응답: accessToken은 헤더, refreshToken은 HttpOnly 쿠키
-            response.setHeader("Authorization", "Bearer " + accessToken);
+          // 1. 리다이렉션할 중간 페이지 URL에 Access Token을 쿼리 파라미터로 추가
+          String targetUrl = UriComponentsBuilder.fromPath("/oauth-redirect") // 중간 페이지 경로
+                  .queryParam("token", accessToken) // Access Token 추가
+                  .build().toUriString();
 
-            ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(Duration.ofDays(14))
-                .build();
+          // 2. Refresh Token은 HttpOnly 쿠키로 설정 (이전과 동일)
+          ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
+              .httpOnly(true)
+              .secure(true) // HTTPS 필수
+              .path("/")
+              .maxAge(Duration.ofDays(14))
+              .sameSite("Lax") // 또는 "Strict"
+              .build();
+          response.addHeader("Set-Cookie", refreshCookie.toString());
 
-            response.addHeader("Set-Cookie", refreshCookie.toString());
-            response.sendRedirect("/home"); // or redirectUri
+          // 3. 중간 페이지로 리다이렉션
+          redirectStrategy.sendRedirect(request, response, targetUrl);
+          // === 수정 끝 ===
         }
+      }catch(Exception e) {
+        log.error("OAuth 로그인 처리 중 예외 발생: {}", e.getMessage(), e); // 스택 트레이스 포함 로깅
+
+        // 이미 응답이 커밋되었는지 확인 (리다이렉션 등이 이미 호출된 경우)
+        if (!response.isCommitted()) {
+            // 1. Refresh Token 쿠키 삭제 시도
+            try {
+                ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "") // 빈 값으로 설정
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(0) // 즉시 만료
+                    .sameSite("Lax")
+                    .build();
+                response.addHeader("Set-Cookie", deleteCookie.toString());
+                log.info("OAuth 처리 실패: Refresh Token 쿠키 삭제 시도 완료.");
+            } catch (Exception cookieEx) {
+                log.warn("OAuth 처리 실패: Refresh Token 쿠키 삭제 중 오류 발생: {}", cookieEx.getMessage());
+            }
+
+            // 2. /home으로 리다이렉션
+            try {
+                // 에러 메시지를 쿼리 파라미터로 전달할 수도 있습니다 (선택 사항).
+                // String errorRedirectUrl = UriComponentsBuilder.fromPath("/home").queryParam("error", "oauth_failed").build().toUriString();
+                 String errorRedirectUrl = "/error"; // 에러 페이지로 보내는 것이 더 일반적일 수 있습니다. 또는 /home
+                redirectStrategy.sendRedirect(request, response, errorRedirectUrl);
+                log.info("OAuth 처리 실패: '{}'로 리다이렉션 시도 완료.", errorRedirectUrl);
+            } catch (IOException redirectEx) {
+                log.error("OAuth 처리 실패: 리다이렉션 중 IOException 발생: {}", redirectEx.getMessage());
+                // 리다이렉션 실패 시 기본 에러 응답 처리 (필요한 경우)
+                // response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "로그인 처리 중 오류가 발생했습니다.");
+            }
+        } else {
+            log.warn("OAuth 처리 실패: 응답이 이미 커밋되어 추가 처리를 할 수 없습니다.");
+        }
+      }
     }
 
     private String extractProvider(Authentication auth) {

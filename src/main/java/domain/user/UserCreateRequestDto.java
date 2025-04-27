@@ -15,7 +15,7 @@ public record UserCreateRequestDto(
     String name,
     
     @NotBlank(message = "{validation.user.birth.required}")
-    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "{validation.user.birth.invalid}")
+    @Pattern(regexp = "^\\d{8}$", message = "{validation.user.birth.invalid}")
     String birth,
     
     @NotBlank(message = "{validation.user.phone.required}")

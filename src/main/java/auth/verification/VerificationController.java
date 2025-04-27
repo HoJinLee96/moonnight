@@ -1,49 +1,60 @@
 package auth.verification;
 
+import java.time.Duration;
 import java.util.Map;
-import java.util.concurrent.TimeoutException;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import auth.redis.RateLimiterStore;
-import global.annotation.ValidEmail;
-import global.annotation.ValidPhone;
 import global.util.ApiResponse;
+import global.validator.annotaion.ValidEmail;
+import global.validator.annotaion.ValidPhone;
+import jakarta.annotation.security.PermitAll;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("api/public/verify")
+@RequestMapping("/api/verify")
 public class VerificationController {
 
   private final VerificationService verificationService;
   private final RateLimiterStore rateLimiter;
 
+  @Deprecated
   @PostMapping("/compare/sms/jwt")
   public ResponseEntity<ApiResponse<Map<String,String>>> compareSmsVerificatioForJwt(
       @Valid @RequestBody VerificationPhoneRequestDto verificationPhoneRequestDto,
-      HttpServletRequest request) throws TimeoutException{
+      HttpServletRequest request) {
     
     String clientIp = (String) request.getAttribute("clientIp");
     rateLimiter.isAllowedByIp(clientIp);
 
-    String token = verificationService.compareSmsForJwt(
-        verificationPhoneRequestDto.phone(), 
-        verificationPhoneRequestDto.verificationCode(), 
-        clientIp);
+//    @Deprecated
+//    String token = verificationService.compareSmsForJwt(
+//        verificationPhoneRequestDto.phone(), 
+//        verificationPhoneRequestDto.verificationCode(), 
+//        clientIp);
     
-    return ResponseEntity.ok(ApiResponse.of(200, "인증 성공.", Map.of("accessToken",token)));
+//    return ResponseEntity.ok(ApiResponse.of(200, "인증 성공.", Map.of("accessToken",token)));
+    return ResponseEntity.status(HttpStatus.GONE).build();
   }
   
-  @PostMapping("/compare/sms/uuid")
+  @PostMapping("/public/compare/sms/uuid")
   public ResponseEntity<ApiResponse<Map<String,String>>> compareSmsVerification(
       @Valid @RequestBody VerificationPhoneRequestDto verificationPhoneRequestDto,
-      HttpServletRequest request) throws TimeoutException{
+      @RequestHeader(required = false, value = "X-Client-Type") String userAgent,
+      HttpServletRequest request) {
+    
+    boolean isMobileApp = userAgent != null && userAgent.contains("mobile");
     
     String clientIp = (String) request.getAttribute("clientIp");
     rateLimiter.isAllowedByIp(clientIp);
@@ -53,14 +64,32 @@ public class VerificationController {
         verificationPhoneRequestDto.verificationCode(), 
         clientIp);
     
-    return ResponseEntity.ok(ApiResponse.of(200, "인증 성공.", Map.of("X-Verfication-Phone-Token",token)));
+    if(isMobileApp) {
+      return ResponseEntity.ok(ApiResponse.of(200, "인증 성공.", Map.of("X-Verification-Phone-Token",token)));
+    }else {
+      ResponseCookie cookie = ResponseCookie.from("X-Verification-Phone-Token", token)
+          .httpOnly(true)
+          .secure(true)
+          .path("/")
+          .maxAge(Duration.ofMinutes(5))
+          .sameSite("Lax")
+          .build();
+      
+      return ResponseEntity
+          .status(HttpStatus.OK) 
+          .header(HttpHeaders.SET_COOKIE, cookie.toString())
+          .body(ApiResponse.of(200, "인증 성공", null));
+    }
   }
   
-  @PostMapping("/compare/email/uuid")
+  @PostMapping("/public/compare/email/uuid")
   public ResponseEntity<ApiResponse<Map<String,String>>> compareEmailVerification(
+      @RequestHeader(required = false, value = "X-Client-Type")String userAgent,
       @Valid @RequestBody VerificationEmailRequestDto verificationEmailRequestDto,
-      HttpServletRequest request) throws TimeoutException{
-    System.out.println(verificationEmailRequestDto.toString());
+      HttpServletRequest request) {
+    
+    boolean isMobileApp = userAgent != null && userAgent.contains("mobile");
+    
     String clientIp = (String) request.getAttribute("clientIp");
     rateLimiter.isAllowedByIp(clientIp);
 
@@ -69,12 +98,29 @@ public class VerificationController {
         verificationEmailRequestDto.verificationCode(), 
         clientIp);
     
-    return ResponseEntity.ok(ApiResponse.of(200, "인증 성공.", Map.of("X-Verfication-Email-Token",token)));
+    if(isMobileApp) {
+      return ResponseEntity.ok(ApiResponse.of(200, "인증 성공.", Map.of("X-Verification-Email-Token",token)));
+    }else {
+      ResponseCookie cookie = ResponseCookie.from("X-Verification-Email-Token", token)
+          .httpOnly(true)
+          .secure(true)
+          .path("/")
+          .maxAge(Duration.ofMinutes(5))
+          .sameSite("Lax")
+          .build();
+      
+      return ResponseEntity
+          .status(HttpStatus.OK) 
+          .header(HttpHeaders.SET_COOKIE, cookie.toString())
+          .body(ApiResponse.of(200, "인증 성공", null));
+    }
+    
   }
   
-  @PostMapping("/sms")
+  // SMS 인증번호 요청
+  @PostMapping("/public/sms")
   public ResponseEntity<ApiResponse<Void>> verifyToSms(
-      @RequestParam("phone") @ValidPhone String phone,
+      @ValidPhone @RequestParam("phone") String phone,
       HttpServletRequest request) {
     
     String clientIp = (String) request.getAttribute("clientIp");
@@ -86,9 +132,10 @@ public class VerificationController {
     return ResponseEntity.ok(ApiResponse.of(200, "인증번호 요청 완료",null));
   }
 
-  @PostMapping("/email")
+  // 이메일 인증번호 요청
+  @PostMapping("/public/email")
   public ResponseEntity<ApiResponse<Void>> verifyToEmail(
-      @RequestParam("email") @ValidEmail String email,
+      @ValidEmail @RequestParam("email") String email,
       HttpServletRequest request) {
     
     String clientIp = (String) request.getAttribute("clientIp");
@@ -99,6 +146,20 @@ public class VerificationController {
     
     return ResponseEntity.ok(ApiResponse.of(200, "인증번호 요청 완료", null));
   }
+  
+  @Deprecated
+  @PermitAll
+  @PostMapping("/confirm")
+  public ResponseEntity<ApiResponse<Void>> confirmSignUpToken(
+      @RequestParam Map<String,String> body,
+      HttpServletRequest request){
+    
+    String clientIp = (String) request.getAttribute("clientIp");
+    verificationService.isToken(body,clientIp);
+    return ResponseEntity.ok(ApiResponse.of(200, "접근 확인 완료", null));
+
+  }
+  
 //  @PostMapping("/compare")
 //  public ResponseEntity<?> compare(Map<String, Object> requestBody, HttpServletRequest req, HttpSession session) throws TimeoutException{
 //    

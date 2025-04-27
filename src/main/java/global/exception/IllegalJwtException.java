@@ -10,7 +10,13 @@ public class IllegalJwtException extends RuntimeException{
   private static final Logger logger = LoggerFactory.getLogger(IllegalJwtException.class);
 
   public IllegalJwtException(String message) {
-  super(message);
-  logger.info(message);
+    super(message);
+    logger.info(message);
   }
+  
+  public IllegalJwtException(String message, String logMessage, Object...strings) {
+  super(message);
+  logger.info(logMessage, strings);
+  }
+  
 }

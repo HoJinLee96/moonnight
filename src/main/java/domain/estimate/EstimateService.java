@@ -23,7 +23,7 @@ import domain.user.UserService;
 import global.exception.ForbiddenException;
 import global.exception.StatusDeleteException;
 import infra.naver.sms.GuidanceService;
-import infra.s3.AWSS3Service;
+import infra.s3.AwsS3Service;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -31,13 +31,13 @@ import lombok.RequiredArgsConstructor;
 public class EstimateService {
   private final EstimateRepository estimateRepository;
   private final UserService userService;
-  private final AWSS3Service awsS3Service;
+  private final AwsS3Service awsS3Service;
   private final VerificationService verificationService;
   private final GuidanceService guidanceService;
   private final Obfuscator obfuscator;
   private static final Logger logger = LoggerFactory.getLogger(EstimateService.class);
   
-  //1.로그인한 유저 조회 OAUTH, USER
+  //1.로그인한 유저 조회 OAUTH, LOCAL
   //2.휴대폰 인증 유저 조회 AUTH
   //3.휴대포번호, 견적서번호 조회 GUEST
 
@@ -124,11 +124,12 @@ public class EstimateService {
 //  1
   @Transactional
   public EstimateResponseDto updateMyEstimate(
+      int estimateId,
       EstimateRequestDto estimateRequestDto,
       List<MultipartFile> images, 
       int userId) throws IOException {
     
-    Estimate estimate = getAuthorizedEstimate(estimateRequestDto.estimateSeq(), userId);
+    Estimate estimate = getAuthorizedEstimate(estimateId, userId);
 
     Estimate updatedEstimate = updateEstimate(estimate, estimateRequestDto, images);
     
@@ -138,13 +139,14 @@ public class EstimateService {
 //  2
   @Transactional
   public EstimateResponseDto updateEstimateByAuthPhone(
+      int estimateId,
       EstimateRequestDto estimateRequestDto, 
       List<MultipartFile> images, 
       String phone) throws IOException {
     
     verificationService.validateVerify(phone);
     
-    Estimate estimate = getAuthorizedEstimate(estimateRequestDto.estimateSeq(), phone);
+    Estimate estimate = getAuthorizedEstimate(estimateId, phone);
     
     Estimate updatedEstimate = updateEstimate(estimate, estimateRequestDto, images);
     

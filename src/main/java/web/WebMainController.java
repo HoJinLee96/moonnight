@@ -1,7 +1,9 @@
 package web;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -37,6 +39,18 @@ public class WebMainController {
   public String showLoginBlank(HttpServletRequest req, HttpServletResponse res,HttpSession session) {
     System.out.println("----------WebMainController.showLoginBlank() 실행----------");
     return "signin/signinBlank";
+  }
+  
+  @GetMapping("/oauth-redirect")
+  public String oauthRedirect() {
+      System.out.println("---------- WebMainController.oauthRedirect() 실행 ----------");
+      return "signin/oauthRedirect";
+  }
+  
+  @GetMapping("/error")
+  public String showError() {
+      System.out.println("---------- WebMainController.oauthRedirect() 실행 ----------");
+      return "error";
   }
   
 //  @GetMapping("/clearLogin")
@@ -77,19 +91,27 @@ public class WebMainController {
   }
 
   @GetMapping("/signup1")
-  public String showJoin(HttpServletRequest req, HttpServletResponse res) {
+  public String showJoin(
+      HttpServletRequest req,
+      HttpServletResponse res) {
     System.out.println("----------WebMainController.showJoin() 실행----------");
+
     return "signup/signup1";
   }
 
    @GetMapping("/signup2")
-   public String showJoin2(HttpServletRequest req, HttpServletResponse res) {
+   public String showJoin2(
+       @RequestHeader(required = false, value = "User-Agent") String userAgent,
+       @CookieValue(required = false, value = "X-Access-SignUp-Token") String webAccessSignUpToken,
+       HttpServletRequest req,
+       HttpServletResponse res) {
    System.out.println("----------WebMainController.joinDetail() 실행----------");
-//   HttpSession session = req.getSession();
-//   RegisterUserDto registerUserDto = (RegisterUserDto) session.getAttribute("registerUserDto");
-//   if (registerUserDto == null) {
-//   return "redirect:/join";
-//   }
+     boolean isMobileApp = userAgent != null && userAgent.contains("MyMobileApp");
+     if(!isMobileApp) {
+       if(webAccessSignUpToken==null || webAccessSignUpToken.isEmpty()) {
+         return "signup/signup1";
+       }
+     }
    return "signup/signup2";
    }
    

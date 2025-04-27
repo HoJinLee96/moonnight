@@ -11,6 +11,9 @@ export function formatEmail(email,message) {
 
 export function formatPasswords(password,message,confirmMessage) {
 	var passwordPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+	if(message){
+		message.innerText = ' ';
+	}
 	if(confirmMessage){
 		confirmMessage.innerText = ' ';
 	}
@@ -23,60 +26,81 @@ export function formatPasswords(password,message,confirmMessage) {
 	return isValid;
 }
 
-export function validateConfirmPasswords(password, confirmPassword, message) {
+export function validateConfirmPasswords(password, confirmPassword, confirmMessage) {
 	const isValid = (password===confirmPassword);
-	if (message) {
-		message.style.color = isValid ? 'green' : 'red';
-		message.innerText = isValid ? "비밀번호가 일치합니다." : "비밀번호가 일치하지 않습니다.";
+	if (confirmMessage) {
+		confirmMessage.style.color = isValid ? 'green' : 'red';
+		confirmMessage.innerText = isValid ? "비밀번호가 일치합니다." : "비밀번호가 일치하지 않습니다.";
 	}
 	return isValid;
 }
 
-export function formaVerifyCode(codeInput) {
-		codeInput.value = codeInput.value.replace(/[^0-9]/g, '');
-}
-
-
 export function formatName(name, message) {
-	var name = document.getElementById("name").value.trim();
-	var message = document.getElementById("nameBirthMessage");
-	message.style.color = 'red';
-
+	
 	// 정규 표현식: 공백 또는 특수기호
-	var regex = /[!@#$%^&*(),.?":{}|<>]/;
-
-	// 1. name 비어있거나 공백이 있거나 특수기호가 들어간 경우 message에 확인 메세지 입력.
-	if (name === "") {
-		message.innerText = "이름을 공백으로 할 수 없습니다.";
-		return false;
-	}else if (regex.test(name)){
-		message.innerText = "이름에 특수기호를 포함 시킬 수 없습니다.";
-		return false;
-		}
-	else {
-		message.innerText = "";
-		return true;
+	var regex = /[!@#$%^&*(),.?":{}|<>\s]/;
+	if(message){
+		message.innerText="";
 	}
-}
-
-export function formatBirth() {
-	var birth = document.getElementById("birth").value.trim();
-	var message = document.getElementById("nameBirthMessage");
-	message.style.color = 'red';
-
-	// 정규 표현식: 공백 또는 특수기호
-	var regex = /[!@#$%^&*(),.?":{}|<>]/;
-
-	if (birth === "" || regex.test(birth) || birth.length !== 8) {
-		message.innerText = "올바른 생년월일 형식을 입력 해주세요.";
+	
+	if (name === "" || regex.test(name)) {
+		if (message) {
+			message.style.color = 'red';
+			message.innerText = "이름에 공백 또는 특수기호를 포함 시킬 수 없습니다.";
+		}
 		return false;
 	} else {
-		message.innerText = "";
+		if(message){
+			message.innerText="";
+		}
+		return true;
+	}
+	
+}
+
+export function formatBirth(input,message) {
+	
+	var regex = /[^0-9]/g; //숫자가 아닌 문자
+	input.value = input.value.replace(regex, '');
+	
+	if (input.value.length > 8) {
+	    input.value = input.value.substring(0, 8);
+	}
+	var birth = input.value;
+	if (birth === "" || regex.test(birth) || birth.length !== 8 || !validDate(birth)) {
+		if(message){
+		message.style.color = 'red';
+		message.innerText = "올바른 생년월일 입력 해주세요.";
+		}
+		return false;
+	}else {
+		if(message){
+			message.innerText="";
+		}
 		return true;
 	}
 }
 
-export function formatPhoneNumber(input) {
+export function validDate(birth) {
+	const year = parseInt(birth.substring(0,4),10);
+	const month = parseInt(birth.substring(4,6),10);
+	const day = parseInt(birth.substring(6,8),10);
+	const date = new Date(year, month -1, day);
+	
+	if (date.getFullYear() !== year|| date.getMonth() !== month - 1 || date.getDate() !== day) {
+  		return false;
+	}
+	
+	const today = new Date();
+    today.setHours(0, 0, 0, 0); // 시/분/초/밀리초를 0으로 설정하여 날짜만 비교
+    if (date > today) {
+        return false;
+    }
+	
+	return true;
+}
+
+export function formatPhoneNumber(input,message) {
 	let value = input.value.replace(/[^0-9]/g, ''); // 숫자 이외의 문자를 제거합니다.
 	let formattedValue = value;
 
@@ -93,9 +117,24 @@ export function formatPhoneNumber(input) {
 		formattedValue = '010-' + value.slice(0, 4) + '-'
 				+ value.slice(4, 8); // 8자리 이상의 경우
 	}
-
+	
 	input.value = formattedValue;
+	if(message){
+		if(value.length<8){
+				message.style.color = 'red';
+				message.innerText = "올바른 휴대폰 번호를 입력 해주세요.";
+		}else{
+			message.innerText = "";
+		}
+	}
+
+	var regex = /^\d{3,4}-\d{3,4}-\d{4}$/;
+	return regex.test(formattedValue);
 }
-export function formatCode(input) {
+
+export function formatVerifyCode(input) {
 	input.value = input.value.replace(/[^0-9]/g, '');
+	if (input.value.length > 6) {
+	    input.value = input.value.substring(0, 6);
+	}
 }

@@ -76,7 +76,7 @@ public class AddressService {
   }
   
   @Transactional
-  public List<AddressResponseDto> updatePrimary(UserProvider userProvider, String email, int addressId) throws AccessDeniedException {
+  public void updatePrimary(UserProvider userProvider, String email, int addressId) throws AccessDeniedException {
     
     User user = userService.getUserByUserProviderAndEmail(userProvider, email);
     Address address = getAuthorizedAddress(user.getUserSeq(), obfuscator.decode(addressId));
@@ -84,8 +84,6 @@ public class AddressService {
     addressRepository.updatePrimaryAddress(address.getAddressSeq(), user.getUserSeq());
     addressRepository.flush();
     
-    return addressRepository.findByUserOrderByPrimaryAndDate(user.getUserSeq())
-        .stream().map(e->AddressResponseDto.fromEntity(e, obfuscator)).collect(Collectors.toList());
   }
   
   @Transactional

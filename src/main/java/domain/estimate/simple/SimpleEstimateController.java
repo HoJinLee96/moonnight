@@ -16,16 +16,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import auth.redis.RateLimiterStore;
 import auth.sign.token.CustomUserDetails;
-import domain.estimate.EstimateResponseDto;
-import global.annotation.ValidPhone;
 import global.util.ApiResponse;
+import global.validator.annotaion.ValidId;
+import global.validator.annotaion.ValidPhone;
 import jakarta.annotation.security.PermitAll;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/private/spem")
+@RequestMapping("/api/spem")
 @RequiredArgsConstructor
 public class SimpleEstimateController {
   
@@ -33,12 +33,12 @@ public class SimpleEstimateController {
   private final RateLimiterStore rateLimiter;
 
   // SimpleEstimate = Spem
-  //1.로그인한 유저 조회 OAUTH, USER
+  //1.로그인한 유저 조회 OAUTH, LOCAL
   //2.휴대폰 인증 유저 조회 AUTH
   //3.휴대포번호, 견적서번호 조회 GUEST
   
   @PermitAll
-  @PostMapping("/register")
+  @PostMapping("/public/register")
   public ResponseEntity<ApiResponse<SimpleEstimateResponseDto>> registerSimpleEstimate(
       @Valid @RequestBody SimpleEstimateRequestDto simpleEstimateRequestDto,
       HttpServletRequest request) {
@@ -54,32 +54,32 @@ public class SimpleEstimateController {
   }
   
 //  1
-  @PreAuthorize("hasRole('OAUTH')")
-  @GetMapping("/user/get/all")
-  public ResponseEntity<ApiResponse<List<EstimateResponseDto>>> getMyAllEstimateByUserId(
+  @PreAuthorize("hasRole('OAUTH') or hasRole('LOCAL')")
+  @GetMapping("/private/user")
+  public ResponseEntity<ApiResponse<List<SimpleEstimateResponseDto>>> getMyAllEstimateByUserId(
       @AuthenticationPrincipal CustomUserDetails userDetails) {
     
-    List<EstimateResponseDto> list = spemService.getMyAllSpem(userDetails.getUserId());
+    List<SimpleEstimateResponseDto> list = spemService.getMyAllSpem(userDetails.getUserId());
     
     return ResponseEntity.ok(ApiResponse.of(200, "조회 요청 성공", list));
   }
   
 //  1
-  @PreAuthorize("hasRole('OAUTH')")
-  @GetMapping("/user/get")
+  @PreAuthorize("hasRole('OAUTH') or hasRole('LOCAL')")
+  @GetMapping("/private/user/{estimateId}")
   public ResponseEntity<ApiResponse<SimpleEstimateResponseDto>> getMyEstimateByEstimateId(
       @AuthenticationPrincipal CustomUserDetails userDetails,
-      @RequestParam int id
+      @ValidId @PathVariable int spemId
       ) throws AccessDeniedException {
     
-    SimpleEstimateResponseDto spemResponseDto = spemService.getMySpemBySpemId(id, userDetails.getUserId());
+    SimpleEstimateResponseDto spemResponseDto = spemService.getMySpemBySpemId(spemId, userDetails.getUserId());
     
     return ResponseEntity.ok(ApiResponse.of(200, "조회 요청 성공", spemResponseDto));
   }
   
 //  2
   @PreAuthorize("hasRole('AUTH')")
-  @GetMapping("/auth/get/all")
+  @GetMapping("/private/auth")
   public ResponseEntity<ApiResponse<List<SimpleEstimateResponseDto>>> getAllEstimateByAuthPhone(
       @AuthenticationPrincipal CustomUserDetails userDetails) {
     
@@ -91,47 +91,46 @@ public class SimpleEstimateController {
   
 //  2
   @PreAuthorize("hasRole('AUTH')")
-  @GetMapping("/auth/get")
+  @GetMapping("/private/auth/{estimateId}")
   public ResponseEntity<ApiResponse<SimpleEstimateResponseDto>> getEstimateByAuthPhone(
       @AuthenticationPrincipal CustomUserDetails userDetails,
-      @RequestParam int id) throws AccessDeniedException {
+      @ValidId @PathVariable int spemId) throws AccessDeniedException {
     
     SimpleEstimateResponseDto simpleEstimateResponseDto = 
-        spemService.getSpemBySpemIdAndAuthPhone(id,userDetails.getUsername());
+        spemService.getSpemBySpemIdAndAuthPhone(spemId,userDetails.getUsername());
     
     return ResponseEntity.ok(ApiResponse.of(200, "조회 요청 성공", simpleEstimateResponseDto));
   }
   
 //  3
-  @PermitAll
-  @PostMapping("/guest/get")
-  public ResponseEntity<?> getEstimateByEstimateIdAndPhone(
+  @PostMapping("/public/guest")
+  public ResponseEntity<ApiResponse<SimpleEstimateResponseDto>> getEstimateByEstimateIdAndPhone(
       @ValidPhone @RequestParam String phone,
-      @RequestParam int id) throws AccessDeniedException {
+      @ValidId @RequestParam int spemId) throws AccessDeniedException {
     
-    SimpleEstimateResponseDto spemResponseDto = spemService.getSpemBySpemIdAndPhone(id,phone);
+    SimpleEstimateResponseDto spemResponseDto = spemService.getSpemBySpemIdAndPhone(spemId,phone);
     
     return ResponseEntity.ok(ApiResponse.of(200, "조회 요청 성공", spemResponseDto));
   }
   
-  @PreAuthorize("hasRole('OAUTH')")
-  @DeleteMapping("/{simpleEstimateId}")
-  public ResponseEntity<ApiResponse<EstimateResponseDto>> deleteEstimateByUser(
+  @PreAuthorize("hasRole('OAUTH') or hasRole('LOCAL')")
+  @DeleteMapping("/private/{spemId}")
+  public ResponseEntity<ApiResponse<Void>> deleteEstimateByUser(
       @AuthenticationPrincipal CustomUserDetails userDetails,
-      @PathVariable int simpleEstimateId) throws AccessDeniedException{
+      @PathVariable int spemId) throws AccessDeniedException{
     
-    spemService.deleteMySpem(simpleEstimateId, userDetails.getUserId());
+    spemService.deleteMySpem(spemId, userDetails.getUserId());
     
     return ResponseEntity.ok(ApiResponse.of(200, "삭제 요청 성공", null));
   }
   
   @PreAuthorize("hasRole('AUTH')")
-  @DeleteMapping("/auth/{simpleEstimateId}")
-  public ResponseEntity<ApiResponse<EstimateResponseDto>> deleteEstimateByAuthPhone(
+  @DeleteMapping("/private/auth/{spemId}")
+  public ResponseEntity<ApiResponse<Void>> deleteEstimateByAuthPhone(
       @AuthenticationPrincipal CustomUserDetails userDetails,
-      @PathVariable int simpleEstimateId) throws AccessDeniedException{
+      @PathVariable int spemId) throws AccessDeniedException{
     
-    spemService.deleteSpemByAuth(simpleEstimateId, userDetails.getUsername());
+    spemService.deleteSpemByAuth(spemId, userDetails.getUsername());
     
     return ResponseEntity.ok(ApiResponse.of(200, "삭제 요청 성공", null));
   }

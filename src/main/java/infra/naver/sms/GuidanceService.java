@@ -24,7 +24,6 @@ public class GuidanceService {
   @Value("${naver-sms.adminPhone}")
   private String adminPhone;
   
-  @Transactional
   public void sendEstimateInfoSms(String recipientPhone, String estimateSeq) throws InvalidKeyException, JsonProcessingException, NoSuchAlgorithmException, UnsupportedEncodingException, URISyntaxException {
     String body = "[ 견적 번호 : " + estimateSeq + " ]\n"+
         "달밤청소 문의 주셔서 감사합니다.\n"+
@@ -48,7 +47,6 @@ public class GuidanceService {
     naverSmsClient.sendVerificationCode(naverSmsPayload);
   }
   
-  @Transactional
   public void sendSecurityAlert(String message) throws InvalidKeyException, JsonProcessingException, NoSuchAlgorithmException, UnsupportedEncodingException, URISyntaxException {
     
     // 수신자 설정

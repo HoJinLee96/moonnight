@@ -22,8 +22,9 @@ public record AddressRequestDto(
     @NotBlank(message = "validation.address.detail_address.required")
     @Size(max = 255, message = "{validation.address.invalid}")
     String detailAddress,
+
+    Boolean isPrimary
     
-    boolean isPrimary
 ) {
   
     public Address toEntity(User user) {
@@ -33,7 +34,6 @@ public record AddressRequestDto(
             .postcode(postcode)
             .mainAddress(mainAddress)
             .detailAddress(detailAddress)
-            .isPrimary(isPrimary)
             .build();
     }
 }

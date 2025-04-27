@@ -12,7 +12,6 @@ import global.exception.IllegalJwtException;
 import lombok.RequiredArgsConstructor;
 
 @Component
-@RequiredArgsConstructor
 public class JwtLoginFilter extends AbstractJwtFilter<CustomUserDetails> {
 
   @Override
@@ -42,7 +41,7 @@ public class JwtLoginFilter extends AbstractJwtFilter<CustomUserDetails> {
     }
     String providerStr = (String) claims.get("provider");
     if (providerStr == null || providerStr.isEmpty()) {
-      throw new IllegalJwtException("유효하지 않은 JWT 입니다. - providerStr");
+      throw new IllegalJwtException("유효하지 않은 JWT 입니다. - provider");
     }
     UserProvider userProvider = UserProvider.valueOf(providerStr); // 문자열을 Provider Enum으로 변환
 

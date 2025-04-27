@@ -92,7 +92,7 @@ padding:10px 0px 30px 0px;
     width: 60px;
     height: 60px;
 }
-#rememmberIdCheckbox{
+#rememmberEmailCheckbox{
     appearance: none; /* 기본 스타일 제거 */
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -106,11 +106,11 @@ padding:10px 0px 30px 0px;
     outline: none;
     transition: background-color 0.2s, border-color 0.2s;
 }
-#rememmberIdCheckbox:checked {
+#rememmberEmailCheckbox:checked {
     background-color: #20367a; /* 체크된 배경색 */
     border-color: #20367a;
 }
-#rememmberIdCheckbox:checked::after {
+#rememmberEmailCheckbox:checked::after {
     content: '';
     position: absolute;
     top: 40%;
@@ -121,7 +121,7 @@ padding:10px 0px 30px 0px;
     border-width: 0 2px 2px 0;
     transform: translate(-50%, -50%) rotate(45deg);
 }
-label[for="rememmberIdCheckbox"]{
+label[for="rememmberEmailCheckbox"]{
 font-size: 14px;
 margin-right: 140px;
 color: #666;
@@ -219,8 +219,15 @@ background: #d0d0d0;
 cursor: pointer;
 }
 </style>
-<!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
-<script src="/static/js/signin.js"></script>
+<script type="text/javascript">
+document.addEventListener('DOMContentLoaded', function() {
+    const rememberedEmail = localStorage.getItem('rememberEmail');
+    if (rememberedEmail) {
+        document.getElementById('email').value = rememberedEmail;
+        document.getElementById('rememmberEmailCheckbox').checked =true;
+    }
+});
+</script>
 </head>
 <body>
 <%@ include file = "/WEB-INF/view/main/main_header.jsp" %>
@@ -229,7 +236,7 @@ cursor: pointer;
 
 	<div class ="loginform">
 	    <h2 class = "title">로그인</h2>
-		<form onsubmit="signin(event)" id="loginForm">
+		<div id="loginForm">
 			<div class = "emailDiv">
 		        <label for="email">이메일</label>
 		        <input type="email" id=email name="email" required autofocus placeholder="example@example.com">
@@ -242,13 +249,13 @@ cursor: pointer;
 		        <div id = "passwordInitButton">&times;</div>
 			</div>
 	        <div id ="etcActionDiv">
-	        	<input type="checkbox" id="rememmberIdCheckbox" name="rememmberIdCheckbox">
-	        	<label for="rememmberIdCheckbox">이메일 저장</label>
+	        	<input type="checkbox" id="rememmberEmailCheckbox" name="rememmberEmailCheckbox">
+	        	<label for="rememmberEmailCheckbox">이메일 저장</label>
 				<a href="" id="findEmail" onclick="openFindWindow('/find/email')">이메일 찾기</a>
 				<a href="" id="findPassword" onclick="openFindWindow('/update/password/blank')">비밀번호 찾기</a>
 	        </div>
-	        <button type="submit">로그인</button>
-	    </form>
+	        <button id = "signInButton" type="button">로그인</button>
+	    </div>
 	        <button id="joinButton" type="button">회원가입</button>
 	    <div id = "underline-text"></div>
 	    <div id = "OAutoLoginBlcok">
@@ -266,6 +273,7 @@ cursor: pointer;
 
 <%@ include file = "/WEB-INF/view/main/main_footer.jsp" %>
 </body>
+
 <script type="text/javascript">
 var email = document.getElementById('email');
 var emailInitButton = document.getElementById('emailInitButton');
@@ -321,61 +329,7 @@ function buttonDisplay(input,button){
 }
 </script>
 
-<!-- 로그인 -->
 <script type="text/javascript">
-/* $(document).ready(function() {
-    $('#loginForm').on('submit', function(event) {
-        event.preventDefault();
-        var email = $('#email').val();
-        var password = $('#password').val();
-        var rememberIdCheckbox = $('#rememmberIdCheckbox').is(':checked');
-        
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/user/login/email', true); // 비동기식 요청
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
-        
-        // 데이터를 한 번에 전송
-        var data = 'email=' + encodeURIComponent(email) +
-                   '&password=' + encodeURIComponent(password);
-        
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-            	var response = JSON.parse(xhr.responseText);
-                if (rememberIdCheckbox) {
-                    localStorage.setItem('chamRememmberUserId', email);
-                } else {
-                    localStorage.removeItem('chamRememmberUserId');
-                }
-                location.href = response.redirectUrl;
-            } else if (xhr.status === 401 || xhr.status === 410) {
-                alert("일치하는 회원 정보가 없습니다.");
-                location.reload();
-            } else if (xhr.status === 403) {
-                alert("본인인증이 필요한 계정입니다.");
-                location.href = "/verifyUser";
-            } else if (xhr.status === 500) {
-                alert("서버 오류가 발생했습니다. \n 다시 시도해주세요.");
-                location.reload();
-            } else {
-                alert("알 수 없는 오류가 발생했습니다.");
-                location.reload();
-            }
-        };
-        xhr.send(data);
-    });
-}); */
-    
-</script>
-
-<script type="text/javascript">
-document.addEventListener('DOMContentLoaded', function() {
-    const rememberedEmail = localStorage.getItem('chamRememmberUserId');
-    if (rememberedEmail) {
-        document.getElementById('email').value = rememberedEmail;
-        document.getElementById('rememmberIdCheckbox').checked =true;
-    }
-});
-
 function openFindWindow(url) {
     // 새 창의 크기 지정
     const width = 500;
@@ -397,6 +351,58 @@ function openFindWindow(url) {
 document.getElementById('joinButton').addEventListener('click',function(){
 	window.location.href="/signup1";
 });
+</script>
+
+<script>
+  function loginWithKakao() {
+    // 실제 환경에서는 클라이언트 ID와 리다이렉션 URI를 안전하게 관리해야 합니다.
+    const KAKAO_CLIENT_ID = 'YOUR_KAKAO_CLIENT_ID'; // 실제 값으로 변경
+    const REDIRECT_URI = 'http://localhost:8080/oauth/callback/kakao'; // 백엔드 콜백 처리 경로와 일치
+
+    // 카카오 로그인 페이지 URL 생성
+    const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code`;
+
+    // 카카오 로그인 페이지로 이동
+    window.location.href = kakaoAuthUrl;
+  }
+
+  function loginWithNaver() {
+    const NAVER_CLIENT_ID = 'YOUR_NAVER_CLIENT_ID'; // 실제 값으로 변경
+    const REDIRECT_URI = 'http://localhost:8080/oauth/callback/naver'; // 백엔드 콜백 처리 경로와 일치
+    const STATE = 'RANDOM_STATE_STRING'; // CSRF 방어를 위한 상태 토큰 (선택적이지만 권장)
+
+    const naverAuthUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${NAVER_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&state=${STATE}`;
+
+    window.location.href = naverAuthUrl;
+  }
+</script>
+
+<script type="module">
+  import { signIn } from '/static/js/sign.js';
+
+document.getElementById("signInButton").addEventListener("click", (e)=> {
+	var email = document.getElementById("email").value;
+	var password = document.getElementById("password").value;
+	var rememmberEmail = document.getElementById("rememmberEmailCheckbox").checked;
+	signIn(email,password,rememmberEmail,
+	()=>{
+	alert("로그인성공");
+	},
+	(error)=>{
+		if (error.type === "VALIDATION") {
+		    	alert(error.message);
+		  	} else if (error.type === "SERVER") {
+				if(error.status === 401 || error.status === 404){
+		    	alert("이메일과 비밀번호를 확인해 주세요.");
+				}  else if(error.status === 500){
+		    	alert("죄송합니다. 현재 접속이 불가능 합니다.");
+				}else{
+		    	alert("죄송합니다. 현재 접속이 불가능 합니다.");
+				}
+		}
+	});
+});
+
 </script>
 
 </html>

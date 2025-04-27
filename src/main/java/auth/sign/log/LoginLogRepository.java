@@ -13,7 +13,6 @@ import jakarta.transaction.Transactional;
 @Repository
 public interface LoginLogRepository extends JpaRepository<LoginLog, Integer>{
   
-
   @Query("SELECT COUNT(l) FROM LoginLog l WHERE l.email = :email AND l.userProvider = :userProvider AND l.resolveBy IS NULL AND l.loginResult NOT IN :excludedResults")
   int countUnresolvedFailed(@Param("userProvider") UserProvider userProvider, 
                             @Param("email") String email, 

@@ -5,31 +5,28 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class AWSS3Service {
+public class AwsS3Service {
 
-  private final AWSS3Cilent awsS3Dao;
+  private final AwsS3Cilent awsS3Cilent;
 
-  @Transactional
   public List<String> uploadEstimateImages(List<MultipartFile> images, String phone) throws IOException {
     String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
     String keyPrefix = "estimateImages/" + timestamp + "_" + phone.replace("-", "") + "/";
-    return awsS3Dao.uploadFiles(images, keyPrefix);
+    return awsS3Cilent.uploadFiles(images, keyPrefix);
   }
   
-  @Transactional
   public void deleteEstimateImages(List<String> imagesPath) {
     for(String path : imagesPath) {
         if(!path.startsWith("estimateImages/")) {
           throw new IllegalStateException("AWSS3 이미지 조회 실패 : 데이터 형식 부적합.");
         }
     }
-    awsS3Dao.deleteFiles(imagesPath.toArray(String[]::new));
+    awsS3Cilent.deleteFiles(imagesPath.toArray(String[]::new));
   }
 
 //  public List<File> getEstimateImages(String imagesPath) throws IOException {

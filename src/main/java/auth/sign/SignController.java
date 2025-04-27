@@ -1,30 +1,31 @@
 package auth.sign;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import auth.sign.token.CustomUserDetails;
 import domain.user.UserCreateRequestDto;
-import domain.user.UserService;
-import global.annotation.ValidEmail;
-import global.annotation.ValidPassword;
+import domain.user.UserResponseDto;
 import global.exception.IllegalJwtException;
 import global.util.ApiResponse;
+import global.validator.annotaion.ClientSpecific;
+import global.validator.annotaion.ValidEmail;
+import global.validator.annotaion.ValidPassword;
+import global.validator.annotaion.ValidPhone;
 import jakarta.annotation.security.PermitAll;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,25 +34,114 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/public/sign")
+@RequestMapping("/api/sign")
 public class SignController {
 
-  private final UserService userService;
-  private final SigninService loginService;
+  private final SignService signService;
 
-  @PermitAll
-  @PostMapping("/in/local")
-  public ResponseEntity<?> loginLocal(@Valid @RequestBody SigninRequestDto loginRequestDto,
-                                      HttpServletRequest request) {
-    
+  @PostMapping("/public/in/local")
+  public ResponseEntity<?> signInLocal(
+      @RequestHeader(required = false, value = "X-Client-Type") String userAgent,
+      @Valid @RequestBody SignInRequestDto signInRequestDto,
+      HttpServletRequest request) {
+    System.out.println("로그인시작");
     String clientIp = (String) request.getAttribute("clientIp");
-    Map<String,String> loginJwt = loginService.loginLocal(loginRequestDto, clientIp);
-    
-    String userAgent = request.getHeader("User-Agent");
-    boolean isMobileApp = userAgent != null && userAgent.contains("MyMobileApp");
+    Map<String,String> loginJwt = signService.signInLocal(signInRequestDto, clientIp);
+    System.out.println("loginJwt: "+ loginJwt);
+    boolean isMobileApp = userAgent != null && userAgent.contains("mobile");
 
     if (isMobileApp) {
-      return ResponseEntity.ok(loginJwt);
+      return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.of(200, "로그인 성공.", loginJwt));
+    } else {
+      System.out.println("로그인완료");
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", loginJwt.get("refreshToken"))
+            .httpOnly(true)
+            .secure(true)
+            .path("/")
+            .maxAge(Duration.ofDays(14))
+            .build();
+  
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + loginJwt.get("accessToken"))
+            .header(HttpHeaders.LOCATION, "/home")
+            .build();
+    }
+  }
+  
+  @PostMapping("/public/in/auth/sms")
+  public ResponseEntity<?> signInAuthSms(
+      @RequestHeader(required = false, value = "X-Client-Type") String userAgent,
+      @ClientSpecific("X-Verification-Phone-Token") String verificationPhoneToken,
+      @ValidPhone @RequestParam String phone,
+      HttpServletRequest request) {
+    
+    String clientIp = (String) request.getAttribute("clientIp");
+    
+    String accessToken = signService.signInAuthSms(phone, verificationPhoneToken, clientIp);
+    
+    boolean isMobileApp = userAgent != null && userAgent.contains("mobile");
+
+    if (isMobileApp) {
+      return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.of(200, "로그인 성공.", accessToken));
+    } else {
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+            .header(HttpHeaders.LOCATION, "/home")
+            .build();
+    }
+  }
+  
+  @PreAuthorize("hasRole('LOCAL')")
+  @PostMapping("/private/password")
+  public ResponseEntity<ApiResponse<Map<String,String>>> validPassword(
+      @AuthenticationPrincipal CustomUserDetails user,
+      @ValidPassword @RequestParam String password,
+      HttpServletRequest request){
+    
+    String clientIp = (String) request.getAttribute("clientIp");
+
+    String accessPaaswordToken = signService.validPassword(user.getEmail(), password, clientIp);
+    return ResponseEntity.ok(ApiResponse.of(200, "비밀번호 검증 성공.", Map.of("X-Access-Paasword-Token",accessPaaswordToken)));
+  }
+  
+  @GetMapping("/public/access")
+  public ResponseEntity<ApiResponse<UserResponseDto>> accessToken(
+      @RequestHeader("Authorization") String bearerToken,
+      HttpServletRequest request) {
+    String accessToken = (bearerToken != null && bearerToken.startsWith("Bearer ")) ? bearerToken.substring(7) : null;
+    String clientIp = (String) request.getAttribute("clientIp");
+    System.out.println("AccessToken 통해 로그인 여부 파악 시작 accessToken: "+ accessToken);
+    
+    UserResponseDto userResponseDto = signService.getUserByAccessToken(accessToken, clientIp);
+    System.out.println(userResponseDto.toString());
+      return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.of(200, "로그인 성공.", userResponseDto));
+  }
+  
+  @PostMapping("/public/refresh")
+  public ResponseEntity<?> refresh(
+      @RequestHeader(required = false, value = "X-Client-Type") String userAgent,
+      @RequestHeader("Authorization") String bearerToken,
+      @CookieValue(required = false, value = "refreshToken") String refreshToken,
+      @RequestBody(required = false) Map<String, String> body,
+      HttpServletRequest request) {
+    
+    boolean isMobileApp = userAgent != null && userAgent.contains("mobile");
+
+    String accessToken = (bearerToken != null && bearerToken.startsWith("Bearer ")) ? bearerToken.substring(7) : null;
+    refreshToken = isMobileApp ? body.get("refreshToken") : refreshToken;
+
+    if (accessToken == null || refreshToken == null) {
+      throw new IllegalJwtException("리프레쉬 요청 - 유효하지 않은 요청 입니다.");
+    }
+    
+    String clientIp = (String) request.getAttribute("clientIp");
+    Map<String,String> loginJwt = signService.refresh(accessToken, refreshToken, clientIp);
+    
+    if (isMobileApp) {
+      return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.of(200, "리프레쉬 성공.", loginJwt));
     } else {
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", loginJwt.get("refreshToken"))
             .httpOnly(true)
@@ -61,102 +151,99 @@ public class SignController {
             .build();
   
         return ResponseEntity
-            .status(HttpStatus.FOUND) // 302
+            .status(HttpStatus.OK)
             .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
             .header(HttpHeaders.AUTHORIZATION, "Bearer " + loginJwt.get("accessToken"))
             .header(HttpHeaders.LOCATION, "/home")
             .build();
     }
   }
-  
-  @PermitAll
-  @PostMapping("/refresh")
-  public ResponseEntity<?> refresh(HttpServletRequest request, 
-                                   HttpServletResponse response)
-                                   throws JsonProcessingException, IOException {
-    
-    String bearerToken = request.getHeader("Authorization");
+
+  @PostMapping("/public/out")
+  public ResponseEntity<ApiResponse<Void>> signOut(
+      @AuthenticationPrincipal CustomUserDetails user,
+      @RequestHeader("Authorization") String bearerToken,
+      @RequestHeader(required = false, value = "User-Agent") String userAgent,
+      @CookieValue(required = false, value = "refreshToken") String refreshToken,
+      @RequestBody(required = false) Map<String, String> body,
+      HttpServletRequest request,
+      HttpServletResponse response) {
+
+    System.out.println("로그아웃 요청.");
+    System.out.println("bearerToken: "+ bearerToken);
+    System.out.println("refreshToken: "+ refreshToken);
+    boolean isMobileApp = userAgent != null && userAgent.contains("MyMobileApp");
+
     String accessToken = (bearerToken != null && bearerToken.startsWith("Bearer ")) ? bearerToken.substring(7) : null;
-    String refreshToken = (String) request.getAttribute("refreshToken");
+    refreshToken = isMobileApp ? body.get("refreshToken") : refreshToken;
+
     if (accessToken == null || refreshToken == null) {
       throw new IllegalJwtException("유효하지 않은 요청 입니다.");
     }
     
     String clientIp = (String) request.getAttribute("clientIp");
-    Map<String,String> loginJwt = loginService.refresh(accessToken, refreshToken, clientIp);
     
-    String userAgent = request.getHeader("User-Agent");
-    boolean isMobileApp = userAgent != null && userAgent.contains("MyMobileApp");
-
-    if (isMobileApp) {
-      return ResponseEntity.ok(loginJwt);
-    } else {
-        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", loginJwt.get("refreshToken"))
-            .httpOnly(true)
-            .secure(true)
-            .path("/")
-            .maxAge(Duration.ofDays(14))
-            .build();
-  
-        return ResponseEntity
-            .status(HttpStatus.FOUND) // 302
-            .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + loginJwt.get("accessToken"))
-            .header(HttpHeaders.LOCATION, "/home")
-            .build();
-    }
-  }
-
-  @PreAuthorize("hasRole('OAUTH') or hasRole('USER')")
-  @PostMapping("/out")
-  public ResponseEntity<Void> logout(@AuthenticationPrincipal CustomUserDetails user,
-                                  @RequestBody(required = false) Map<String, String> body,
-                                  @RequestHeader(value = "Authorization", required = false) String bearerToken,
-                                  HttpServletRequest request) {
-
-    String userAgent = request.getHeader("User-Agent");
-    boolean isMobileApp = userAgent != null && userAgent.contains("MyMobileApp");
-
-    String accessToken = isMobileApp ? body.get("refreshToken") : bearerToken.replace("Bearer ", "");
-
-    if (accessToken == null) {
-        throw new IllegalJwtException("잘못된 요청이 아닙니다.");
-    }
+    signService.signout(accessToken, refreshToken, clientIp);
     
-    String clientIp = (String) request.getAttribute("clientIp");
-    
-    loginService.logout(accessToken, user.getUserId()+"", clientIp);
+    ResponseCookie deletedCookie = ResponseCookie.from("refreshToken", "")
+        .path("/")
+        .maxAge(0) // 즉시 삭제
+        .httpOnly(true)
+        .build();
 
-    return ResponseEntity.ok().build();
+    response.addHeader(HttpHeaders.SET_COOKIE, deletedCookie.toString());
+
+    return ResponseEntity.ok(ApiResponse.of(200, "로그아웃 성공.", null));
   }
   
   @PermitAll
-  @PostMapping("/up/first")
-  public ResponseEntity<ApiResponse<String>> signup1(
-      @RequestHeader("X-Verification-Email-Token") String verificationEmailToken,
+  @PostMapping("/public/up/first")
+  public ResponseEntity<ApiResponse<Map<String,String>>> signup1(
+      @RequestHeader(required = false, value = "User-Agent") String userAgent,
+      @ClientSpecific("X-Verification-Email-Token") String verificationEmailToken,
       @ValidEmail @RequestParam("email") String email,
       @ValidPassword @RequestParam("password") String password,
-      @ValidPassword @RequestParam("confirmPassword") String confirmPassword      
+      @ValidPassword @RequestParam("confirmPassword") String confirmPassword
       ) {
+    
+    boolean isMobileApp = userAgent != null && userAgent.contains("MyMobileApp");
+    
     if(!Objects.equals(password, confirmPassword)) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.of(400, "비밀번호 불일치.", null));
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.of(400, "비밀번호가 일치하지 않습니다.", null));
     }
+    
     //이메일 인증 완료 이후 5분 지난 요청 401반환
     //입력한 이메일과 이메일인증한 이메일과 다른경우 401반환
     //이미 가입되어있는 이메일 409반환
-    String joinToken = userService.createJoinToken(email, password, verificationEmailToken);
-
-    return ResponseEntity.ok(ApiResponse.of(200, "회원가입 1차 성공", joinToken));
+    String accessSignUpToken = signService.createJoinToken(email, password, verificationEmailToken);
+    
+    if(isMobileApp) {
+      return ResponseEntity.ok(ApiResponse.of(200, "회원가입 1차 성공", Map.of("X-Access-SignUp-Token",accessSignUpToken)));
+    }else {
+      ResponseCookie cookie = ResponseCookie.from("X-Access-SignUp-Token", accessSignUpToken)
+          .httpOnly(true)
+          .secure(true)
+          .path("/")
+          .maxAge(Duration.ofMinutes(20))
+          .sameSite("Lax")
+          .build();
+      
+      return ResponseEntity
+          .status(HttpStatus.OK) 
+          .header(HttpHeaders.SET_COOKIE, cookie.toString())
+          .body(ApiResponse.of(200, "회원가입 1차 성공", null));
+    }
   }
     
   @PermitAll
-  @PostMapping("/up/second")
+  @PostMapping("/public/up/second")
   public ResponseEntity<ApiResponse<String>> signup2(
-      @RequestHeader("X-Access-Join-Token") String accessJoinToken,
-      @RequestHeader("X-Verification-Phone-Token") String verificationPhoneToken,
+      @RequestHeader(required = false, value = "X-Client-Type") String userAgent,
+      @ClientSpecific("X-Access-SignUp-Token") String accessSignUpToken,
+      @ClientSpecific("X-Verification-Phone-Token") String verificationPhoneToken,
       @RequestBody @Valid UserCreateRequestDto userCreateRequestDto) {
-  
-    String name = userService.joinLocalUser(userCreateRequestDto, accessJoinToken, verificationPhoneToken);
+    
+    String name = signService.signUpLocalUser(userCreateRequestDto, accessSignUpToken, verificationPhoneToken);
     
     return ResponseEntity.ok(ApiResponse.of(200, "회원 가입 성공.", name));
   }

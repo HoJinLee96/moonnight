@@ -2,6 +2,7 @@ package auth.verification;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.concurrent.TimeoutException;
@@ -10,9 +11,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
-import auth.crypto.JwtTokenProvider;
 import auth.redis.TokenStore;
+import auth.redis.TokenStore.TokenType;
 import auth.verification.Verification.VerificationBuilder;
+import global.exception.NoSuchTokenException;
 import global.exception.VerificationTimeoutException;
 import infra.naver.mail.MailRecipientPayload;
 import infra.naver.mail.NaverMailClient;
@@ -30,8 +32,7 @@ public class VerificationService {
   private final VerificationRepository verificationRepository;
   private final NaverMailClient naverMailClient;
   private final NaverSmsClient naverSmsClient;
-  private final TokenStore uuidProvider;
-  private final JwtTokenProvider jwtTokenProvider;
+  private final TokenStore tokenStore;
   private static final Logger logger = LoggerFactory.getLogger(VerificationService.class);
   
   @Value("${naver-sms.senderPhone}")
@@ -142,21 +143,17 @@ public class VerificationService {
   }
   
   @Transactional
-  public String compareSmsForJwt(String phone, String reqCode, String requestIp) throws TimeoutException {
-    Verification verification = compareCode(phone, reqCode, requestIp);
-    return jwtTokenProvider.createVerifyPhoneToken(verification.getVerificationSeq(), List.of("RULES_GUEST"),Map.of("phone",phone));
+  public String compareSms(String phone, String reqCode, String requestIp) {
+    Verification ver = findVerification(phone, requestIp);
+    compareCode(ver, reqCode, requestIp);
+    return tokenStore.createVerificationPhoneToken(phone);
   }
   
   @Transactional
-  public String compareSms(String phone, String reqCode, String requestIp) throws TimeoutException {
-    compareCode(phone, reqCode, requestIp);
-    return uuidProvider.createVerificationPhoneToken(phone);
-  }
-  
-  @Transactional
-  public String compareEmail(String email, String reqCode, String requestIp) throws TimeoutException {
-    compareCode(email, reqCode, requestIp);
-    return uuidProvider.createVerificationEmailToken(email);
+  public String compareEmail(String email, String reqCode, String requestIp) {
+    Verification ver = findVerification(email, requestIp);
+    compareCode(ver, reqCode, requestIp);
+    return tokenStore.createVerificationEmailToken(email);
   }
   
   //  (to 기준, 10분 이내 요청한, 제일 최근에 요청한, 인증 여부)
@@ -167,11 +164,11 @@ public class VerificationService {
         .orElseThrow(()->new BadCredentialsException("인증 되지 않았습니다."));
   }
   
-  private Verification compareCode(String to, String reqCode, String requestIp) throws TimeoutException {
+  public Verification findVerification(String recipient, String requestIp) {
     // ======= 수신자에 일치하는 DB 찾기 =======
-    Verification verification = verificationRepository.findTopByRecipientOrderByCreatedAtDesc(to)
+    Verification verification = verificationRepository.findTopByRecipientOrderByCreatedAtDesc(recipient)
         .orElseThrow(() -> {
-          logger.info("인증 비교 실패 : 존재하지 않는 인증을 인증 요청함. to: {}, reqCode: {}, requestIp: {}",to, reqCode, requestIp);
+          logger.info("인증 비교 실패 : 존재하지 않는 인증을 인증 요청함. recipient: {}, requestIp: {}",recipient, requestIp);
           return new NoSuchElementException("존재하지 않는 인증을 인증 요청함");
           });
     
@@ -184,16 +181,29 @@ public class VerificationService {
       throw new VerificationTimeoutException("인증 시간이 초과 되었습니다.");
     }
     
+    return verification;
+  }
+  
+  public void isToken(Map<String,String> tokenMap, String clientIp) {
+    Map.Entry<String, String> entry = (Entry<String, String>) tokenMap.entrySet();
+    String key = entry.getKey();
+    String value = entry.getValue();
+    if(!tokenStore.isValid(TokenType.valueOf(key), value)) {
+      throw new NoSuchTokenException("적합하지 않습니다.","일치하는 토큰이 없음. tokenMap: {}, clientIp: {}",tokenMap,clientIp);
+    }
+  }
+  
+  
+  private void compareCode(Verification verification, String reqCode, String requestIp) {
     // ======= 인증번호 일치 결과 =======
     if(!verification.getVerificationCode().equals(reqCode)) {
-      logger.info("인증 번호 불일치 : to: {}, reqCode: {}, requestIp: {}",to, reqCode, requestIp);
-      throw new IllegalArgumentException("인증 비교 실패 : 인증 번호 불일치");
+      logger.info("인증 번호 불일치 : recipient: {}, reqCode: {}, requestIp: {}",verification.getRecipient(), reqCode, requestIp);
+      throw new BadCredentialsException("인증 비교 실패 : 인증 번호 불일치");
     }
     
+    // ======= DB `Verifivation` 인증 완료 기록 =======
     verificationRepository.markAsVerified(verification.getVerificationSeq());
     verificationRepository.flush();
-    
-    return verification;
   }
   
   private String generateVerificationCode() {

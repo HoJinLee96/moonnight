@@ -4,12 +4,21 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 import jakarta.servlet.MultipartConfigElement;
 
 @Configuration
 public class EtcConfig {
+  
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+//    비밀번호를 해시할 때 몇 번 반복해서 계산할지를 정하는 값
+    int strength = 12; 
+    return new BCryptPasswordEncoder(strength);
+  }
 
   @Bean
   public MultipartResolver multipartResolver() {

@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import auth.crypto.Obfuscator;
 import auth.verification.VerificationService;
-import domain.estimate.EstimateResponseDto;
 import domain.estimate.Estimate.EstimateStatus;
 import global.exception.ForbiddenException;
 import global.exception.StatusDeleteException;
@@ -23,7 +22,6 @@ public class SimpleEstimateService {
   private final SimpleEstimateRepository spemRepository;
   private final VerificationService verificationService;
   private final Obfuscator obfuscator;
-  private static final Logger logger = LoggerFactory.getLogger(SimpleEstimateService.class);
   
   // SimpleEstimate = Spem
   //1.로그인한 유저 조회 OAUTH, USER
@@ -43,11 +41,11 @@ public class SimpleEstimateService {
   }
   
 //  1
-  public List<EstimateResponseDto> getMyAllSpem(int userId) {
+  public List<SimpleEstimateResponseDto> getMyAllSpem(int userId) {
     return spemRepository.findByUser_UserSeq(userId)
         .stream()
         .filter(e->e.getEstimateStatus()!=EstimateStatus.DELETE)
-        .map(e->EstimateResponseDto.fromEntity(e, obfuscator))
+        .map(e->SimpleEstimateResponseDto.fromEntity(e, obfuscator))
         .collect(Collectors.toList());
   }
   

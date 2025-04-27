@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @PropertySource("classpath:application.properties")
-@RequiredArgsConstructor
 public class Obfuscator {
   
   @Value("${obfuscator.salt}")

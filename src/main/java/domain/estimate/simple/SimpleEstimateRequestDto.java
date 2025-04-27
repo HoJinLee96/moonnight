@@ -1,6 +1,5 @@
 package domain.estimate.simple;
 
-import domain.estimate.Estimate;
 import domain.estimate.Estimate.CleaningService;
 import domain.estimate.Estimate.EstimateStatus;
 import domain.estimate.simple.SimpleEstimate.Region;

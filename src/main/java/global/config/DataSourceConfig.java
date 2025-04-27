@@ -21,7 +21,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 
 @Configuration
 @EnableTransactionManagement // Spring이 트랜잭션 AOP 프록시를 생성하도록 설정하는 역할
-@EnableJpaRepositories(basePackages = {"domain","auth"}) 
+@EnableJpaRepositories(basePackages = {"domain","auth","infra"}) 
 @ComponentScan(basePackages={"domain","auth","infra"})
 @PropertySource("classpath:application.properties")
 public class DataSourceConfig {

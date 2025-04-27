@@ -2,7 +2,6 @@ package domain.estimate.simple;
 
 import java.time.LocalDateTime;
 import auth.crypto.Obfuscator;
-import domain.estimate.Estimate;
 import domain.estimate.Estimate.CleaningService;
 import domain.estimate.Estimate.EstimateStatus;
 import domain.estimate.simple.SimpleEstimate.Region;

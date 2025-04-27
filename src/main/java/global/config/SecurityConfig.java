@@ -13,8 +13,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
@@ -28,20 +26,20 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import auth.oauth.OAuth2LoginSuccessHandler;
+import auth.sign.token.filter.JwtAuthPhoneFilter;
 import auth.sign.token.filter.JwtLoginFilter;
-import auth.sign.token.filter.JwtVerifyPhoneFilter;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity //spring security 활성화
 @RequiredArgsConstructor
 @PropertySource("classpath:application.properties")
-@ComponentScan(basePackages={"auth","client"})
+@ComponentScan(basePackages={"auth"})
 public class SecurityConfig {
 
     private final JwtLoginFilter jwtLoginFilter;
+    private final JwtAuthPhoneFilter jwtAuthPhoneFilter;
     private final OAuth2LoginSuccessHandler oauth2LoginSuccessHandler;
-    private final JwtVerifyPhoneFilter jwtVerifyPhoneFilter;
     
     @Value("${naver-login.clientId}")
     private String naverClientId;
@@ -58,20 +56,17 @@ public class SecurityConfig {
     private String kakaoRedirectUri;
   
     @Bean
-    public PasswordEncoder passwordEncoder() {
-//      비밀번호를 해시할 때 몇 번 반복해서 계산할지를 정하는 값
-      int strength = 12; 
-      return new BCryptPasswordEncoder(strength);
-    }
-    @Bean
     public SecurityFilterChain loginSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher("/api/private/**") // 모든 API 경로에 대해 기본 설정 적용
+            .securityMatcher("/api/*/private/**") // 모든 API 경로에 대해 기본 설정 적용
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/public/**").permitAll()
-                .requestMatchers("/api/private/spem/auth/**", "/api/private/estimate/auth/**").permitAll() // 별도 체인에서 인증 처리
+//                .requestMatchers("/api/public/**").permitAll()
+                .requestMatchers(
+                    "/api/spem/private/auth/**", 
+                    "/api/estimate/private/auth/**"
+                    ).permitAll() 
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtLoginFilter, UsernamePasswordAuthenticationFilter.class);
@@ -82,13 +77,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain phoneAuthSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher("/api/private/spem/auth/**", "/api/private/estimate/auth/**")
+            .securityMatcher("/api/spem/private/auth/**", "/api/estimate/private/auth/**")
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .anyRequest().authenticated()
             )
-            .addFilterBefore(jwtVerifyPhoneFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthPhoneFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -127,7 +122,7 @@ public class SecurityConfig {
       return userRequest -> {
         OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate = new DefaultOAuth2UserService();
         OAuth2User oAuth2User = delegate.loadUser(userRequest);
-        System.out.println("▶ OAuth2User attributes = " + oAuth2User.getAttributes());
+        System.out.println("OAuth2User attributes = " + oAuth2User.getAttributes());
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
         
         if (Objects.equals("naver",registrationId)){
@@ -139,6 +134,7 @@ public class SecurityConfig {
               "id"
           );
         } 
+        System.out.println(oAuth2User.toString());
         return oAuth2User;
         };
     }
